@@ -53,7 +53,7 @@ flowchart TB
     subgraph EPKService[Notification Service]
         Mailer["API"]
         Sender["Sender"]
-        DB[(DB)]
+        DB[(Mongo DB)]
         DB --> Sender
         Mailer --Сообщения--> DB
     end
