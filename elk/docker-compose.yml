@@ -1,0 +1,65 @@
+version: "3.9"
+
+x-base-settings: &base-settings
+  env_file: ./.env
+  restart: on-failure
+
+services:
+  elasticsearch-logs:
+    image: elasticsearch:8.12.2
+    <<: *base-settings
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - ES_JAVA_OPTS=-Xms512m -Xmx1g
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - ./deploy/esdata:/usr/share/elasticsearch/data
+    healthcheck:
+      test: [ CMD-SHELL, curl -s http://elasticsearch:9200/_cluster/health ]
+      interval: 20s
+      timeout: 15s
+      retries: 20
+      start_period: 30s
+
+  logstash:
+    image: logstash:8.12.2
+    <<: *base-settings
+    environment:
+      - XPACK_MONITORING_ENABLED=false
+    ports:
+      - "5044:5044/udp"
+    volumes:
+      - ./deploy/logstash.conf:/usr/share/logstash/config/logstash.conf
+      - ./deploy/logstash/pipeline:/usr/share/logstash/pipeline
+    command: logstash -f /usr/share/logstash/config/logstash.conf
+    depends_on:
+      - elasticsearch-logs
+
+  kibana-logs:
+    image: kibana:8.12.2
+    <<: *base-settings
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch-logs:
+        condition: service_healthy
+
+  filebeat-service-api:
+    image: elastic/filebeat:8.12.0
+    build:
+      context: ./deploy/filebeat
+    volumes:
+      - filebeat_logs:/var/log/filebeat
+    depends_on:
+      - kibana-logs
+      - elasticsearch-logs
+      - logstash
+
+
+# Данный volume также прописать в приложении где планируется собирать логи в файле
+# /opt/log - путь куда складывать логи в самом приложении
+#    volumes:
+#      - filebeat_logs:/opt/log

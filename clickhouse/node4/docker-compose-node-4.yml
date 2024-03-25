@@ -1,0 +1,27 @@
+version: '3.5'
+
+services:
+  zoo4:
+    image: zookeeper:3.9
+    restart: always
+    hostname: zoo4
+    ports:
+      - "2181:2181"
+      - "2888:2888"
+      - "3888:3888"
+    environment:
+      ZOO_MY_ID: 4
+      ZOO_SERVERS: server.1=10.128.0.4:2888:3888;2181 server.2=10.129.0.27:2888:3888;2181 server.3=10.131.0.29:2888:3888;2181 server.4=zoo4:2888:3888;2181
+
+  clickhouse-node4:
+    image: clickhouse/clickhouse-server:24.2.1
+    container_name: clickhouse-node4
+    hostname: clickhouse-node4
+    ports:
+      - "8126:8123"
+      - "9003:9000"
+    volumes:
+      - /mnt/vdb1/data:/var/lib/clickhouse/
+      - ./data/node4:/etc/clickhouse-server
+    depends_on:
+      - zoo4

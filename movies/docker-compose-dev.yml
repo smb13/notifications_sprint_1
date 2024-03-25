@@ -1,0 +1,164 @@
+---
+version : '3.9'
+
+
+services:
+  external_dev:  # External API for development
+    extends:
+      file: docker-compose-base.yml
+      service: external
+    build:
+      context: ./external
+      args:
+        REQUIREMENTS_DEV: true
+    depends_on:
+      elastic:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DEBUG: true
+    ports:
+    - "8888:8000"
+    volumes:
+    -   ./external/src:/src
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    profiles: [external_dev, tests]
+
+  auth_dev:  # auth API for development
+    extends:
+      file: docker-compose-base.yml
+      service: auth
+    build:
+      context: ./auth
+      args:
+        REQUIREMENTS_DEV: true
+    environment:
+      DEBUG: true
+      FORWARDED_ALLOW_IPS: '*'
+    depends_on:
+      redis_auth:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+    - "8000:8000"
+    volumes:
+    -   ./auth/src:/src
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    profiles: [auth_dev]
+
+  tests:
+    build:
+      context: ./tests/functional
+    env_file:
+    -   .env
+    depends_on:
+    -   external_dev
+    command: bash -c "pytest"
+    profiles: [tests]
+
+  admin_dev:  # Admin for development
+    extends:
+      file: docker-compose-base.yml
+      service: admin
+    build:
+      context: ./admin
+      dockerfile: ./Dockerfile
+      args:
+        REQUIREMENTS_DEV: true
+    environment:
+      DEBUG: true
+      SERVICE_AUTH_API_BASE_PATH: http://auth_dev:8000/api/v1
+    ports:
+    - "8080:8000"    # Торчит наружу только при запущенном dev-сервере, на проде торчать не будет
+    volumes:
+    -   ./admin:/src/app
+    -   admin_data:/src/app/data
+    command: sh -c "python ./manage.py migrate && python ./manage.py runserver 0.0.0.0:8000"
+    profiles: [admin_dev]
+
+  ratings_dev: # Ratings API for development
+    extends:
+      file: docker-compose-base.yml
+      service: ratings
+    build:
+      context: ./ratings
+      args:
+        REQUIREMENTS_DEV: true
+    depends_on:
+      elastic:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DEBUG: true
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./ratings/src:/src
+    command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+    profiles: [ ratings_dev, tests ]
+
+  etl:
+    extends:
+      file: docker-compose-base.yml
+      service: etl
+    depends_on:
+      postgres:
+        condition: service_healthy
+      elastic:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles: [etl]
+
+  postgres:
+    extends:
+      file: docker-compose-base.yml
+      service: postgres
+    ports:
+    - "5432:5432"
+    profiles: [etl, admin_dev, auth_dev]
+
+  elastic:
+    extends:
+      file: docker-compose-base.yml
+      service: elastic
+    profiles: [etl, external_dev, tests]
+
+  redis:
+    extends:
+      file: docker-compose-base.yml
+      service: redis
+    profiles: [etl, external_dev, tests]
+
+  redis_auth:
+    extends:
+      file: docker-compose-base.yml
+      service: redis_auth
+    profiles: [auth_dev]
+
+  jaeger:
+    extends:
+      file: docker-compose-base.yml
+      service: jaeger
+    profiles: [auth_dev, external_dev, tests]
+
+  mongo:
+    container_name: mongo
+    image: mongo
+    volumes:
+      - mongo_db:/data/db
+    ports:
+      - "27017:27017"
+    profiles: [ ratings_dev, tests ]
+
+
+
+volumes :
+  postgres_db:
+  esdata:
+  redis_data:
+  admin_data:
+  mongo_db:

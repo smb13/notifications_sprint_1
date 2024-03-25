@@ -1,0 +1,26 @@
+---
+version : '3.9'
+
+services:
+  ui:
+    image: provectuslabs/kafka-ui:v0.7.0
+    ports:
+    -   "8080:8080"
+    environment:
+    -   KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=$KAFKA_CONNECTION_STRING
+    -   KAFKA_CLUSTERS_0_NAME=kraft
+    -   AUTH_TYPE=LOGIN_FORM
+    -   SPRING_SECURITY_USER_NAME=yap-student
+    -   SPRING_SECURITY_USER_PASSWORD=practicum
+
+
+  analytics:
+    build: .
+    env_file: ./.env
+    ports:
+    -   "8000:8000"
+    healthcheck:
+      test: [CMD-SHELL, curl -sS http://127.0.0.1:8000/health_check/v1 || exit 1]
+      interval: 10s
+      timeout: 5s
+      retries: 5
