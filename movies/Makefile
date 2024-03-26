@@ -5,6 +5,7 @@ include ./.env
 
 DOCKER_COMPOSE_PROD = --env-file ./.env -f ./docker-compose.yml
 DOCKER_COMPOSE_DEV = --env-file ./.env -f ./docker-compose-dev.yml
+DOCKER_COMPOSE_TESTS = --env-file ./.env -f ./docker-compose-dev.yml -f ./docker-compose-tests.yml
 
 # Default, Help
 
@@ -16,26 +17,26 @@ help: # Вывод информации make командах
 
 # Start, First start
 
-first_start: postgres db_create admin_migrate redis redis_auth elastic etl production auth_migrations auth_createsuperuser
+first_start: postgres db_create admin_migrate redis redis_auth elastic etl prod auth_migrations auth_createsuperuser
 
 first_start_dev: postgres_dev db_create_dev db_restore_dev redis_dev redis_auth_dev flush_redis_dev elastic_dev clear_elastic_index_dev etl_dev dev auth_createsuperuser_dev
 
-start: production auth_migrations
+start: prod auth_migrations
 
 # Tests
 
 first_start_tests: postgres_dev db_create_dev db_restore_dev redis_dev redis_auth_dev flush_redis_dev elastic_dev clear_elastic_index_dev etl_dev tests
 
 tests:
-	docker compose $(DOCKER_COMPOSE_DEV) --profile tests up --build --attach tests
+	docker compose $(DOCKER_COMPOSE_TESTS) up --build --attach tests
 
 # Profiles
 
-production:
+prod:
 	docker compose $(DOCKER_COMPOSE_PROD) up -d
 
 dev:
-	docker compose $(DOCKER_COMPOSE_DEV) --profile external_dev --profile admin_dev --profile auth_dev --profile ratings_dev up -d
+	docker compose $(DOCKER_COMPOSE_DEV) up -d --build
 
 # Redis
 
@@ -112,7 +113,7 @@ external:  # Собрать и запустить контейнер External AP
 	docker compose $(DOCKER_COMPOSE_PROD) up --build -d external
 
 external_dev:  # Собрать и запустить тестовый контейнер External API (с зависимостями для разработки)
-	docker compose $(DOCKER_COMPOSE_DEV) --profile external_dev up --build -d
+	docker compose $(DOCKER_COMPOSE_DEV) up --build -d external_dev
 
 # Auth
 
@@ -120,7 +121,7 @@ auth:  # Собрать и запустить тестовый контейне�
 	docker compose $(DOCKER_COMPOSE_PROD) up --build -d auth
 
 auth_dev:  # Собрать и запустить тестовый контейнер Auth (с зависимостями для разработки)
-	docker compose $(DOCKER_COMPOSE_DEV) --profile auth_dev up --build -d
+	docker compose $(DOCKER_COMPOSE_DEV) up --build -d auth_dev
 
 auth_createsuperuser:  # Создать суперпользователя по параметрам LOCAL_USER_EMAIL LOCAL_USER_PASSWORD из .env
 	@docker compose $(DOCKER_COMPOSE_PROD) run --rm auth bash -c \
@@ -149,7 +150,7 @@ admin:  # Собрать и запустить контейнер Django Admin
 	docker compose $(DOCKER_COMPOSE_PROD) up --build -d admin
 
 admin_dev:  # Собрать и запустить тестовый контейнер Django Admin (с зависимостями для разработки и запуска автотестов)
-	docker compose $(DOCKER_COMPOSE_DEV) --profile admin_dev up --build -d
+	docker compose $(DOCKER_COMPOSE_DEV) up --build -d admin_dev
 
 admin_migrate:  # Запустить миграции Django для создания структуры базы данных
 	@docker compose $(DOCKER_COMPOSE_PROD) run --rm admin bash -c "python ./manage.py migrate"
@@ -193,6 +194,13 @@ mongo_config_routers_shards: # Конфигурация роутеров
 mongo_logs: # Журнал
 	docker compose $(DOCKER_COMPOSE_DEV) logs --tail 100 -f
 
+# Filebeat
+
+filebeat_dev: # Отобразить логи заданного приложения
+	docker compose $(DOCKER_COMPOSE_DEV) up -d filebeat
+
+elasticsearch_logs_dev: # Отобразить логи elasticsearch-logs
+	docker compose $(DOCKER_COMPOSE_DEV) logs -f --tail=200 elasticsearch-logs
 
 # Stop & Down
 
@@ -200,12 +208,14 @@ stop:
 	docker compose $(DOCKER_COMPOSE_PROD) stop
 
 stop_dev:
-	docker compose $(DOCKER_COMPOSE_DEV) --profile production --profile external_dev \
-	--profile admin_dev --profile tests --profile auth_dev --profile ratings_dev  stop
+	docker compose $(DOCKER_COMPOSE_DEV) stop
 
 down:
-	docker compose $(DOCKER_COMPOSE_PROD) down --remove-orphans
+	docker compose $(DOCKER_COMPOSE_PROD) down -v --rmi all --remove-orphans
 
 down_dev:
-	docker compose $(DOCKER_COMPOSE_DEV) --profile production --profile external_dev \
-	--profile admin_dev --profile tests down --remove-orphans
+	docker compose $(DOCKER_COMPOSE_TESTS) down -v --rmi all --remove-orphans
+
+clear: ## Команда для очистки всех контейнеров и образов (удалит вообще всё)
+	docker system prune -a
+	docker volume prune

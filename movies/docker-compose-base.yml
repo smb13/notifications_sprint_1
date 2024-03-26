@@ -1,51 +1,164 @@
 ---
-version : '3.9'
+version : '3.8'
+
+
+x-base-settings: &base-settings
+  env_file: .env
+  restart: always
+
+
+x-elastic-envs: &elastic-envs
+  environment:
+    ES_JAVA_OPTS: -Xms1000m -Xmx1000m
+    discovery.type: single-node
+    xpack.security.enabled: false
+    bootstrap.memory_lock: true
+    cluster.routing.allocation.disk.threshold_enabled: false
 
 
 services:
-  external:  # External API for production
+  external:
     build:
       context: ./external
-    restart: always
-    env_file:
-    -   .env
+    <<: *base-settings
     environment:
       PORT: 8000
       OTEL_SERVICE_NAME: movies-api
 
-  auth:  # auth API for production
+  auth:
     build:
       context: ./auth
-    restart: always
-    env_file:
-    -   .env
+    <<: *base-settings
     environment:
       PORT: 8000
       OTEL_SERVICE_NAME: auth-service
 
-  admin:  # Admin for production
+  admin:
     build:
       context: ./admin
-      dockerfile: ./Dockerfile
-    restart: always
-    env_file:
-    -   .env
+    <<: *base-settings
     volumes:
     -   admin_data:/src/app/data
 
-  ratings: # External API for production
+  ratings:
     build:
       context: ./ratings
-    restart: always
-    env_file:
-      - .env
+    <<: *base-settings
     environment:
       PORT: 8080
       OTEL_SERVICE_NAME: ratings-api
       MONGO_DSN: mongo
 
-  nginx:  # For production
+  etl:
+    build:
+      context: etl
+    <<: *base-settings
+    volumes:
+    -   ./etl/:/src/app/
+
+  postgres:
+    image: postgres:13-alpine
+    <<: *base-settings
+    volumes:
+    -   ./db_dump:/etc/db_dump/
+    -   postgres_db:/var/lib/postgresql/data
+    healthcheck:
+      test: psql -U $POSTGRES_USER -d postgres -c "SELECT 1;"
+      start_period: 5s
+      interval: 2s
+      timeout: 1s
+      retries: 3
+
+  elastic:
+    image: elasticsearch:8.6.2
+    <<: [ *base-settings, *elastic-envs ]
+    volumes:
+    -   es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: curl -f http://localhost:9200/_cluster/health
+      start_period: 10s
+      interval: 5s
+      timeout: 1s
+      retries: 10
+
+  redis:
+    image: redis:7.2.0-alpine
+    <<: *base-settings
+    volumes:
+    -   redis_data:/data
+    expose:
+    -   ${REDIS_PORT}
+    healthcheck:
+      test: redis-cli -c "PING"
+      start_period: 5s
+      interval: 2s
+      timeout: 1s
+      retries: 3
+
+  redis_auth:
+    image: redis:7.2.0-alpine
+    <<: *base-settings
+    volumes:
+    -   redis_data:/data
+    expose:
+    -   ${REDIS_PORT_AUTH}
+    healthcheck:
+      test: redis-cli -c "PING"
+      start_period: 5s
+      interval: 2s
+      timeout: 1s
+      retries: 3
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    <<: *base-settings
+    ports:
+    - "6831:6831/udp"
+    - "16686:16686"
+    environment:
+      QUERY_BASE_PATH: /jaeger
+
+  elasticsearch-logs:
+    image: elasticsearch:8.12.2
+    <<: [ *base-settings, *elastic-envs ]
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_logs_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: curl -f http://localhost:9200/_cluster/health
+      start_period: 10s
+      interval: 5s
+      timeout: 1s
+      retries: 10
+
+  logstash:
+    image: logstash:8.12.2
+    <<: *base-settings
+    environment:
+      - XPACK_MONITORING_ENABLED=false
+    ports:
+      - "5044:5044/udp"
+    volumes:
+      - ./elk/logstash.conf:/usr/share/logstash/config/logstash.conf
+      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline
+    command: logstash -f /usr/share/logstash/config/logstash.conf
+
+  kibana:
+    image: kibana:8.12.2
+    <<: *base-settings
+    ports:
+      - "5601:5601"
+
+  filebeat:
+    build:
+      context: ./elk/filebeat
+    volumes:
+      - filebeat_data:/var/log/filebeat
+
+  nginx:
     image: nginx:1.25.2
+    <<: *base-settings
     volumes:
     -   type: volume
         source: admin_data
@@ -60,92 +173,19 @@ services:
     ports:
     -   "8888:8888"
 
-  nginx_proxy:  # For production
+  nginx_proxy:
     image: nginx:1.25.2
+    <<: *base-settings
     volumes:
     -   ./nginx_proxy.conf:/etc/nginx/nginx.conf:ro
     environment:
       TZ: Europe/Moscow
     network_mode: host
 
-  etl:
-    build:
-      context: etl
-      dockerfile: ./Dockerfile
-    restart: always
-    env_file:
-    -   .env
-    volumes:
-    -   ./etl/:/src/app/
-
-  postgres:
-    restart: always
-    image: postgres:13-alpine
-    volumes:
-    -   ./db_dump:/etc/db_dump/
-    -   postgres_db:/var/lib/postgresql/data
-    env_file:
-    -   .env
-    healthcheck:
-      test: psql -U $POSTGRES_USER -d postgres -c "SELECT 1;"
-      start_period: 5s
-      interval: 2s
-      timeout: 1s
-      retries: 3
-
-  elastic:
-    restart: always
-    image: elasticsearch:8.6.2
-    volumes:
-    -   esdata:/usr/share/elasticsearch/data
-    environment:
-      ES_JAVA_OPTS: -Xms1000m -Xmx1000m
-      discovery.type: single-node
-      xpack.security.enabled: false
-      cluster.routing.allocation.disk.threshold_enabled: false
-    healthcheck:
-      test: curl -f http://localhost:9200/_xpack
-      start_period: 10s
-      interval: 5s
-      timeout: 1s
-      retries: 10
-
-  redis:
-    image: redis:7.2.0-alpine
-    volumes:
-    -   redis_data:/data
-    expose:
-    -   ${REDIS_PORT}
-    healthcheck:
-      test: redis-cli -c "PING"
-      start_period: 5s
-      interval: 2s
-      timeout: 1s
-      retries: 3
-
-  redis_auth:
-    image: redis:7.2.0-alpine
-    volumes:
-    -   redis_data:/data
-    expose:
-    -   ${REDIS_PORT_AUTH}
-    healthcheck:
-      test: redis-cli -c "PING"
-      start_period: 5s
-      interval: 2s
-      timeout: 1s
-      retries: 3
-
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    ports:
-    - "6831:6831/udp"
-    - "16686:16686"
-    environment:
-      QUERY_BASE_PATH: /jaeger
-
 volumes :
   postgres_db:
-  esdata:
+  es_data:
   redis_data:
   admin_data:
+  es_logs_data:
+  filebeat_data:
