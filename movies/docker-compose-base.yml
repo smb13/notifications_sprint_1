@@ -156,7 +156,18 @@ services:
     volumes:
       - filebeat_data:/var/log/filebeat
 
-  nginx:
+  notification: # External API for production
+    build:
+      context: ./notification
+    restart: always
+    env_file:
+      - .env
+    environment:
+      PORT: 8080
+      OTEL_SERVICE_NAME: notification-api
+      MONGO_DSN: mongo
+
+  nginx:  # For production
     image: nginx:1.25.2
     <<: *base-settings
     volumes:

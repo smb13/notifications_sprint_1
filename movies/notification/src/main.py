@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 from http import HTTPStatus
 
 import uvicorn
-# from async_fastapi_jwt_auth import AuthJWT
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import ORJSONResponse
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
