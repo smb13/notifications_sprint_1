@@ -150,6 +150,7 @@ services:
     extends:
       file: docker-compose-base.yml
       service: jaeger
+    profiles: [auth_dev, external_dev, tests, notification_dev]
 
   mongo:
     container_name: mongo
@@ -158,6 +159,7 @@ services:
       - mongo_db:/data/db
     ports:
       - "27017:27017"
+    profiles: [ ratings_dev, tests, notification_dev ]
 
   elasticsearch-logs:
     extends:
