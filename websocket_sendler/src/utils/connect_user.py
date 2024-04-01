@@ -28,7 +28,7 @@ async def encode_jwt_token():
 async def main():
     async with websockets.connect(WS_URL) as websocket:
         token = await encode_jwt_token()
-        data_to_send = json.dumps({"user_id": token})
+        data_to_send = json.dumps({"jwt_token": token})
         await websocket.send(data_to_send)
         logging.info(f"Connected to {WS_URL}")
 

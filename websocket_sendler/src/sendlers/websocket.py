@@ -14,9 +14,8 @@ ws_connT: dict[str, websockets.server.WebSocketServerProtocol] = {}
 
 async def handler(ws: WebSocketServerProtocol):
     """Обработчик websocket."""
-    user_id_token = json.loads(await ws.recv())
-    if (user_id := await decode_jwt_and_get_userid(user_id_token.get("user_id"))) is None:
-        logger.warning(f"{user_id}")
+    jwt_token = json.loads(await ws.recv())
+    if (user_id := await decode_jwt_and_get_userid(jwt_token.get("jwt_token"))) is None:
         await ws.close(1011, "Некорректный JWT токен")
         return
 
@@ -37,5 +36,5 @@ async def send_by_websocket(message: AbstractIncomingMessage) -> None:
         logger.exception("Ошибка при обработке данных по ws: %s", message.body)
         return
 
-    if ws := ws_connT.get(str(notification.user_id)) is not None:
+    if (ws := ws_connT.get(str(notification.user_id))) is not None:
         await ws.send(notification.msg_body)

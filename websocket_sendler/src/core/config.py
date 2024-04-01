@@ -9,7 +9,7 @@ ENV_PATH = os.path.join(BASE_DIR, ".env")
 
 class ProjectSettings(BaseSettings):
     model_config = SettingsConfigDict(extra="ignore", env_file=ENV_PATH, env_file_encoding="utf-8")
-    log_level: int = Field(default=10)
+    log_level: int = Field(default=20)
     log_format: str = Field(default='%(asctime)s [%(levelname)s] [in %(filename)s: line %(lineno)d] - "%(message)s"')
     backoff_max_tries: int = Field(default=30)  # кол-во попыток переподключения к БД при потери соединения
     jwt_secret: str = Field(default="BIG_BIG_SECRET")
