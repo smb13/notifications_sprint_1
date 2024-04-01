@@ -12,6 +12,7 @@ class MailingTemplate(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255, verbose_name=_("name"))
     source_code = models.TextField(blank=True, verbose_name=_("html source code"), validators=[validate_jinja2_syntax])
+    users_selector = models.JSONField(blank=True, verbose_name=_("users selector"), default=dict)
 
     class Meta:
         db_table = 'content"."mailing_template'

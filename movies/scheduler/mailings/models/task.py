@@ -72,11 +72,12 @@ class MailingTask(models.Model):
         if not hasattr(self, "periodic_task") or not self.periodic_task:
             self.periodic_task = PeriodicTask.objects.create(
                 name=self.description,
-                task="mailings.tasks.send_mailings",
+                task="task_send_mailings",
                 crontab=self.crontab_schedule,
             )
         else:
             self.periodic_task.name = self.description
+            self.periodic_task.task = "task_send_mailings"
             self.periodic_task.save()
 
         super().clean()

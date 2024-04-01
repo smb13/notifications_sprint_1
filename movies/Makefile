@@ -36,7 +36,7 @@ prod:
 	docker compose $(DOCKER_COMPOSE_PROD) up -d
 
 dev:
-	docker compose $(DOCKER_COMPOSE_DEV) up -d --build
+	docker compose $(DOCKER_COMPOSE_DEV) up -d --build --remove-orphans
 
 # Redis
 

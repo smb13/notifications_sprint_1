@@ -127,7 +127,7 @@ services        :
     -   ./scheduler:/src
     command: sh -c "celery -A config worker -B -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler"
 
-  scheduler_flower:
+  flower:
     <<: *base-scheduler
     volumes:
     -   ./scheduler:/src
@@ -138,7 +138,8 @@ services        :
     -   ${FLOWER_PORT_LOCAL}:${FLOWER_PORT}
     environment:
       FLOWER_UNAUTHENTICATED_API: 'true'
-    command: sh -c "celery -A config flower --conf=/src/wfm/flowerconfig.py"
+      FLOWER_URL_PREFIX: ${FLOWER_URL_PREFIX}
+    command: sh -c "celery -A config flower"
 
   ratings_dev: # Ratings API for development
     extends:
