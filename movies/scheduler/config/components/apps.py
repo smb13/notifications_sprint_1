@@ -1,0 +1,16 @@
+# Application definition
+
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django_celery_beat",
+    "rest_framework",
+    'drf_spectacular',
+    "django_ace",
+    "mailings.apps.MailingsConfig",
+    "utils.apps.UtilsConfig",
+]

@@ -1,7 +1,24 @@
 ---
-version : '3.9'
+version         : '3.9'
 
-services:
+x-base-scheduler: &base-scheduler
+  extends:
+    file: docker-compose-base.yml
+    service: scheduler
+  environment:
+    DEBUG: true
+  depends_on:
+    postgres:
+      condition: service_healthy
+    auth_dev:
+      condition: service_started
+  logging:
+    driver: gelf
+    options:
+      gelf-address: udp://127.0.0.1:5044
+      tag: apps
+
+services        :
   external_dev:  # External API for development
     extends:
       file: docker-compose-base.yml
@@ -18,14 +35,14 @@ services:
     environment:
       DEBUG: true
     ports:
-    - "8888:8000"
+    -   8888:8000
     volumes:
     -   ./external/src:/src
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     logging:
       driver: gelf
       options:
-        gelf-address: "udp://127.0.0.1:5044"
+        gelf-address: udp://127.0.0.1:5044
         tag: apps
 
   auth_dev:  # auth API for development
@@ -39,20 +56,21 @@ services:
     environment:
       DEBUG: true
       FORWARDED_ALLOW_IPS: '*'
+      REDIS_HOST: redis
     depends_on:
-      redis_auth:
+      redis:
         condition: service_healthy
       postgres:
         condition: service_healthy
     ports:
-    - "8000:8000"
+    -   8000:8000
     volumes:
     -   ./auth/src:/src
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     logging:
       driver: gelf
       options:
-        gelf-address: "udp://127.0.0.1:5044"
+        gelf-address: udp://127.0.0.1:5044
         tag: apps
 
   admin_dev:  # Admin for development
@@ -67,19 +85,60 @@ services:
       DEBUG: true
       SERVICE_AUTH_API_BASE_PATH: http://auth_dev:8000/api/v1
     ports:
-    - "8080:8000"    # Торчит наружу только при запущенном dev-сервере, на проде торчать не будет
+    -   8080:8000    # Торчит наружу только при запущенном dev-сервере, на проде торчать не будет
     volumes:
     -   ./admin:/src/app
     -   admin_data:/src/app/data
     depends_on:
       postgres:
         condition: service_healthy
+      auth_dev:
+        condition: service_started
     command: sh -c "python ./manage.py migrate && python ./manage.py runserver 0.0.0.0:8000"
     logging:
       driver: gelf
       options:
-        gelf-address: "udp://127.0.0.1:5044"
+        gelf-address: udp://127.0.0.1:5044
         tag: apps
+
+  scheduler:
+    <<: *base-scheduler
+    build:
+      context: ./scheduler
+      args:
+        REQUIREMENTS_DEV: true
+        COMPILE_MESSAGES: true
+    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && python ./manage.py runserver 0.0.0.0:8000"
+    ports:
+    -   8088:8000
+    volumes:
+    -   ./scheduler:/src
+    -   scheduler_data:/src/data
+    healthcheck:
+      test: curl -f http://localhost:8000/healthcheck/
+      start_period: 10s
+      interval: 5s
+      timeout: 2s
+      retries: 10
+
+  scheduler_beat:
+    <<: *base-scheduler
+    volumes:
+    -   ./scheduler:/src
+    command: sh -c "celery -A config worker -B -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+
+  scheduler_flower:
+    <<: *base-scheduler
+    volumes:
+    -   ./scheduler:/src
+    depends_on:
+    -   scheduler_beat
+    -   redis
+    ports:
+    -   ${FLOWER_PORT_LOCAL}:${FLOWER_PORT}
+    environment:
+      FLOWER_UNAUTHENTICATED_API: 'true'
+    command: sh -c "celery -A config flower --conf=/src/wfm/flowerconfig.py"
 
   ratings_dev: # Ratings API for development
     extends:
@@ -97,14 +156,14 @@ services:
     environment:
       DEBUG: true
     ports:
-      - "8082:8080"
+    -   8082:8080
     volumes:
-      - ./ratings/src:/src
+    -   ./ratings/src:/src
     command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload
     logging:
       driver: gelf
       options:
-        gelf-address: "udp://127.0.0.1:5044"
+        gelf-address: udp://127.0.0.1:5044
         tag: apps
 
   etl:
@@ -121,30 +180,32 @@ services:
     logging:
       driver: gelf
       options:
-        gelf-address: "udp://127.0.0.1:5044"
+        gelf-address: udp://127.0.0.1:5044
         tag: apps
 
   postgres:
     extends:
       file: docker-compose-base.yml
       service: postgres
+    volumes:
+    -   ./db_dump:/etc/db_dump/
+    -   postgres_db:/var/lib/postgresql/data
     ports:
-    - "5432:5432"
+    -   5432:5432
 
   elastic:
     extends:
       file: docker-compose-base.yml
       service: elastic
+    ports:
+    -   9200:9200
 
   redis:
     extends:
       file: docker-compose-base.yml
       service: redis
-
-  redis_auth:
-    extends:
-      file: docker-compose-base.yml
-      service: redis_auth
+    volumes:
+    -   redis_data:/data
 
   jaeger:
     extends:
@@ -155,29 +216,31 @@ services:
     container_name: mongo
     image: mongo
     volumes:
-      - mongo_db:/data/db
+    -   mongo_db:/data/db
     ports:
-      - "27017:27017"
-
-  elasticsearch-logs:
-    extends:
-      file: docker-compose-base.yml
-      service: elasticsearch-logs
+    -   27017:27017
 
   logstash:
     extends:
       file: docker-compose-base.yml
       service: logstash
+    environment:
+      ES_HOST: elasticsearch:9200
     depends_on:
-      elasticsearch-logs:
+      elastic:
         condition: service_healthy
+    volumes:
+    -   ./elk/logstash.conf:/usr/share/logstash/config/logstash.conf
+    -   ./elk/logstash/pipeline:/usr/share/logstash/pipeline
 
   kibana:
     extends:
       file: docker-compose-base.yml
       service: kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elastic:9200
     depends_on:
-      elasticsearch-logs:
+      elastic:
         condition: service_healthy
 
   filebeat:
@@ -185,15 +248,18 @@ services:
       file: docker-compose-base.yml
       service: filebeat
     depends_on:
-      - kibana
-      - logstash
+    -   kibana
+    -   logstash
+    volumes:
+    -   filebeat_data:/var/log/filebeat
 
 
-volumes :
+volumes         :
   postgres_db:
   es_data:
   redis_data:
   admin_data:
+  scheduler_data:
   mongo_db:
   es_logs_data:
   filebeat_data:

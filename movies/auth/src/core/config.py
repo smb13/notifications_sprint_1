@@ -17,8 +17,8 @@ class Settings(BaseSettings):
 
     # Настройки Redis
     redis_host: str = "redis_auth"
-    redis_port: int = Field(alias="REDIS_PORT_AUTH", default=6379)
-    redis_db: int = Field(alias="REDIS_STATES_DB", default=0)
+    redis_port: int = 6379
+    redis_db: int = Field(alias="REDIS_DB_AUTH", default=1)
 
     # Настройки PostgreSQL
     postgres_host: str = "postgres"
