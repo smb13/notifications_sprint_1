@@ -16,7 +16,8 @@ class ProjectSettings(BaseSettings):
 
 
 class WebsocketSettings(BaseSettings):
-    model_config = SettingsConfigDict(extra="ignore", env_file=ENV_PATH, env_prefix="websocket_sender_", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(extra="ignore", env_file=ENV_PATH, env_prefix="websocket_sender_",
+                                      env_file_encoding="utf-8")
     host: str = Field(default="127.0.0.1")
     port: int = Field(default=8080)
     exchange: str = Field(default="websocket")

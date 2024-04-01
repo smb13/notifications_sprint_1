@@ -11,4 +11,3 @@ async def decode_jwt_and_get_userid(token: str) -> str | None:
     except jwt.PyJWTError:
         return None
     return decoded_token["sub"]
-

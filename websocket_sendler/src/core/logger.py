@@ -38,4 +38,3 @@ def logging_init():
 
 logging_init()
 logger = logging.getLogger(__name__)
-

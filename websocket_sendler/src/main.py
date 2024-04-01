@@ -17,5 +17,5 @@ async def main():
 if __name__ == "__main__":
     try:
         asyncio.run(main())
-    except KeyboardInterrupt as k_exc:
+    except KeyboardInterrupt:
         logger.info("Ручное завершение работы приложения")
