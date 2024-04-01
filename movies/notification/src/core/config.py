@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     page_size_max: int = 100
 
     send_timeout: int = 5
-    show_timeout: int = 60*60*24
+    show_timeout: int = 60 * 60 * 24
 
 
 # Корень проекта

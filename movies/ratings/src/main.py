@@ -11,7 +11,6 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from api.routers import all_v1_routers
 from core.config import settings
 from core.tracer import configure_tracer
-
 from db import mongo
 
 
@@ -19,13 +18,19 @@ from db import mongo
 async def lifespan(_: FastAPI) -> AsyncGenerator:
     mongo.connect(settings.mongo_dsn)
     mongo.mongo[settings.mongo_db][settings.mongo_rating_collection].create_index(
-        ['movie_id', 'user_id'], unique=True, background=True
+        ["movie_id", "user_id"],
+        unique=True,
+        background=True,
     )
     mongo.mongo[settings.mongo_db][settings.mongo_review_collection].create_index(
-        ['movie_id', 'user_id'], unique=True, background=True
+        ["movie_id", "user_id"],
+        unique=True,
+        background=True,
     )
     mongo.mongo[settings.mongo_db][settings.mongo_bookmarks_collection].create_index(
-        ['user_id', 'movie_id'], unique=True, background=True
+        ["user_id", "movie_id"],
+        unique=True,
+        background=True,
     )
     yield
     mongo.mongo.close()

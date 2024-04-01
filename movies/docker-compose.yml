@@ -59,7 +59,7 @@ services:
     environment:
       TZ: Europe/Moscow
     ports:
-    - "8888:8888"
+    -   8888:8888
     depends_on:
     -   admin
     -   auth
@@ -154,7 +154,7 @@ services:
   jaeger:
     image: jaegertracing/all-in-one:latest
     ports:
-    - "6831:6831/udp"
+    -   6831:6831/udp
     environment:
       QUERY_BASE_PATH: /jaeger
 

@@ -18,14 +18,14 @@ services:
     environment:
       DEBUG: true
     ports:
-    - "8888:8000"
+    -   8888:8000
     volumes:
     -   ./external/src:/src
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     logging:
       driver: gelf
       options:
-        gelf-address: "udp://127.0.0.1:5044"
+        gelf-address: udp://127.0.0.1:5044
         tag: apps
 
   auth_dev:  # auth API for development
@@ -45,14 +45,14 @@ services:
       postgres:
         condition: service_healthy
     ports:
-    - "8000:8000"
+    -   8000:8000
     volumes:
     -   ./auth/src:/src
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     logging:
       driver: gelf
       options:
-        gelf-address: "udp://127.0.0.1:5044"
+        gelf-address: udp://127.0.0.1:5044
         tag: apps
 
   admin_dev:  # Admin for development
@@ -67,7 +67,7 @@ services:
       DEBUG: true
       SERVICE_AUTH_API_BASE_PATH: http://auth_dev:8000/api/v1
     ports:
-    - "8080:8000"    # Торчит наружу только при запущенном dev-сервере, на проде торчать не будет
+    -   8080:8000    # Торчит наружу только при запущенном dev-сервере, на проде торчать не будет
     volumes:
     -   ./admin:/src/app
     -   admin_data:/src/app/data
@@ -78,7 +78,7 @@ services:
     logging:
       driver: gelf
       options:
-        gelf-address: "udp://127.0.0.1:5044"
+        gelf-address: udp://127.0.0.1:5044
         tag: apps
 
   ratings_dev: # Ratings API for development
@@ -97,14 +97,14 @@ services:
     environment:
       DEBUG: true
     ports:
-      - "8082:8080"
+    -   8082:8080
     volumes:
-      - ./ratings/src:/src
+    -   ./ratings/src:/src
     command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload
     logging:
       driver: gelf
       options:
-        gelf-address: "udp://127.0.0.1:5044"
+        gelf-address: udp://127.0.0.1:5044
         tag: apps
 
   notification_dev: # Ratings API for development
@@ -118,11 +118,11 @@ services:
     environment:
       DEBUG: true
     ports:
-      - "8000:8080"
+    -   8000:8080
     volumes:
-      - ./notification/src:/src
+    -   ./notification/src:/src
     command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload
-    profiles: [ notification_dev, tests ]
+    profiles: [notification_dev, tests]
 
   etl:
     extends:
@@ -138,7 +138,7 @@ services:
     logging:
       driver: gelf
       options:
-        gelf-address: "udp://127.0.0.1:5044"
+        gelf-address: udp://127.0.0.1:5044
         tag: apps
 
   postgres:
@@ -146,7 +146,7 @@ services:
       file: docker-compose-base.yml
       service: postgres
     ports:
-    - "5432:5432"
+    -   5432:5432
 
   elastic:
     extends:
@@ -173,10 +173,10 @@ services:
     container_name: mongo
     image: mongo
     volumes:
-      - mongo_db:/data/db
+    -   mongo_db:/data/db
     ports:
-      - "27017:27017"
-    profiles: [ ratings_dev, tests, notification_dev ]
+    -   27017:27017
+    profiles: [ratings_dev, tests, notification_dev]
 
   elasticsearch-logs:
     extends:
@@ -204,8 +204,8 @@ services:
       file: docker-compose-base.yml
       service: filebeat
     depends_on:
-      - kibana
-      - logstash
+    -   kibana
+    -   logstash
 
 
 volumes :

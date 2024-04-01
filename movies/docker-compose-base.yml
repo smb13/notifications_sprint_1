@@ -1,5 +1,5 @@
 ---
-version : '3.8'
+version        : '3.8'
 
 
 x-base-settings: &base-settings
@@ -7,7 +7,7 @@ x-base-settings: &base-settings
   restart: always
 
 
-x-elastic-envs: &elastic-envs
+x-elastic-envs : &elastic-envs
   environment:
     ES_JAVA_OPTS: -Xms1000m -Xmx1000m
     discovery.type: single-node
@@ -16,7 +16,7 @@ x-elastic-envs: &elastic-envs
     cluster.routing.allocation.disk.threshold_enabled: false
 
 
-services:
+services       :
   external:
     build:
       context: ./external
@@ -71,7 +71,7 @@ services:
 
   elastic:
     image: elasticsearch:8.6.2
-    <<: [ *base-settings, *elastic-envs ]
+    <<: [*base-settings, *elastic-envs]
     volumes:
     -   es_data:/usr/share/elasticsearch/data
     healthcheck:
@@ -113,18 +113,18 @@ services:
     image: jaegertracing/all-in-one:latest
     <<: *base-settings
     ports:
-    - "6831:6831/udp"
-    - "16686:16686"
+    -   6831:6831/udp
+    -   16686:16686
     environment:
       QUERY_BASE_PATH: /jaeger
 
   elasticsearch-logs:
     image: elasticsearch:8.12.2
-    <<: [ *base-settings, *elastic-envs ]
+    <<: [*base-settings, *elastic-envs]
     ports:
-      - "9200:9200"
+    -   9200:9200
     volumes:
-      - es_logs_data:/usr/share/elasticsearch/data
+    -   es_logs_data:/usr/share/elasticsearch/data
     healthcheck:
       test: curl -f http://localhost:9200/_cluster/health
       start_period: 10s
@@ -136,32 +136,32 @@ services:
     image: logstash:8.12.2
     <<: *base-settings
     environment:
-      - XPACK_MONITORING_ENABLED=false
+    -   XPACK_MONITORING_ENABLED=false
     ports:
-      - "5044:5044/udp"
+    -   5044:5044/udp
     volumes:
-      - ./elk/logstash.conf:/usr/share/logstash/config/logstash.conf
-      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline
+    -   ./elk/logstash.conf:/usr/share/logstash/config/logstash.conf
+    -   ./elk/logstash/pipeline:/usr/share/logstash/pipeline
     command: logstash -f /usr/share/logstash/config/logstash.conf
 
   kibana:
     image: kibana:8.12.2
     <<: *base-settings
     ports:
-      - "5601:5601"
+    -   5601:5601
 
   filebeat:
     build:
       context: ./elk/filebeat
     volumes:
-      - filebeat_data:/var/log/filebeat
+    -   filebeat_data:/var/log/filebeat
 
   notification: # External API for production
     build:
       context: ./notification
     restart: always
     env_file:
-      - .env
+    -   .env
     environment:
       PORT: 8080
       OTEL_SERVICE_NAME: notification-api
@@ -182,7 +182,7 @@ services:
     environment:
       TZ: Europe/Moscow
     ports:
-    -   "8888:8888"
+    -   8888:8888
 
   nginx_proxy:
     image: nginx:1.25.2
@@ -193,7 +193,7 @@ services:
       TZ: Europe/Moscow
     network_mode: host
 
-volumes :
+volumes        :
   postgres_db:
   es_data:
   redis_data:

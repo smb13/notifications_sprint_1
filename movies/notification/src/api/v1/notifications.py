@@ -2,10 +2,10 @@ import uuid
 from http import HTTPStatus
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Path, Body
+from fastapi import APIRouter, Body, Depends, Path
 
 from schemas.notifications import EmailNotification, PushNotification, PushNotificationState
-from services.notifications import get_notifications_service, NotificationsService
+from services.notifications import NotificationsService, get_notifications_service
 
 router = APIRouter(redirect_slashes=False)
 

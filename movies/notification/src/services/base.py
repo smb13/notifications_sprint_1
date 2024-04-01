@@ -1,5 +1,5 @@
 from async_fastapi_jwt_auth import AuthJWT
-from motor.core import AgnosticClient
+from motor.core import AgnosticClient, AgnosticCollection
 
 from core.config import settings
 
@@ -13,5 +13,5 @@ class BaseService:
         self.jwt = jwt
         self.mongo = mongo
 
-    def db(self):
+    def db(self) -> AgnosticCollection:
         return self.mongo[settings.mongo_db][settings.mongo_notifications_collection]
