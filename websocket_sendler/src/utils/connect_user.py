@@ -32,9 +32,6 @@ async def main():
         await websocket.send(data_to_send)
         logging.info(f"Connected to {WS_URL}")
 
-        logging.info(f"User_id: {USER_UUID}")
-        logging.info(f"JWT: {token}")
-
         async for message in websocket:
             logging.info(f"Полученное сообщение: {message}")
 

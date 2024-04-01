@@ -12,7 +12,6 @@ FROM base as builder
 ENV PIP_NO_CACHE_DIR=1
 
 COPY requirements.txt .
-#COPY requirements-dev.txt .
 
 RUN apt-get update &&  \
     apt-get install libffi-dev libpq-dev liblz4-dev libunwind-dev -y \
@@ -23,7 +22,6 @@ RUN apt-get update &&  \
 RUN if "$REQUIREMENTS_DEV" ; then pip install -r /requirements.dev.txt ; fi
 
 COPY ./src /app/src/
-#COPY ./tests /app/tests/
 
 FROM builder as final
 
