@@ -122,7 +122,6 @@ services:
     volumes:
     -   ./notification/src:/src
     command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload
-    profiles: [notification_dev, tests]
 
   etl:
     extends:
@@ -167,7 +166,6 @@ services:
     extends:
       file: docker-compose-base.yml
       service: jaeger
-    profiles: [auth_dev, external_dev, tests, notification_dev]
 
   mongo:
     container_name: mongo
@@ -175,8 +173,7 @@ services:
     volumes:
     -   mongo_db:/data/db
     ports:
-    -   27017:27017
-    profiles: [ratings_dev, tests, notification_dev]
+      - 27017:27017
 
   elasticsearch-logs:
     extends:
