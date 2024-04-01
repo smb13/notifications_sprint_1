@@ -118,7 +118,7 @@ external_dev:  # Собрать и запустить тестовый конт�
 # Notification Service
 
 notification_dev:
-	docker compose $(DOCKER_COMPOSE_DEV) --profile notification_dev up --build -d
+	docker compose $(DOCKER_COMPOSE_DEV) up --build -d
 
 notification_stop:
 	docker compose $(DOCKER_COMPOSE_DEV) --profile notification_dev stop
