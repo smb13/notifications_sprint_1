@@ -166,7 +166,6 @@ services:
     extends:
       file: docker-compose-base.yml
       service: jaeger
-    profiles: [auth_dev, external_dev, tests, notification_dev]
 
   mongo:
     container_name: mongo
