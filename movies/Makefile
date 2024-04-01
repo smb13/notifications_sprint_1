@@ -121,7 +121,7 @@ notification_dev:
 	docker compose $(DOCKER_COMPOSE_DEV) up --build -d
 
 notification_stop:
-	docker compose $(DOCKER_COMPOSE_DEV) --profile notification_dev stop
+	docker compose $(DOCKER_COMPOSE_DEV) stop
 
 # Auth
 
