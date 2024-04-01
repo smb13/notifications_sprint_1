@@ -47,7 +47,10 @@ async def remove_bookmark(
 async def get_bookmarks_list(
     page: int = Query(default=1, description="Pagination page number", ge=1),
     page_size: int = Query(
-        default=settings.page_size, description="Pagination page size", ge=1, le=settings.page_size_max
+        default=settings.page_size,
+        description="Pagination page size",
+        ge=1,
+        le=settings.page_size_max,
     ),
     bookmarks_service: BookmarksService = Depends(get_bookmarks_service),
 ) -> BookmarksListResponse:

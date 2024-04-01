@@ -1,4 +1,4 @@
-from pydantic import Field, BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class RatingsResponse(BaseModel):
@@ -31,7 +31,7 @@ class RatingsResponse(BaseModel):
 
     total: int | None = Field(
         0,
-        description="Число оценок фильма"
+        description="Число оценок фильма",
     )
 
     model_config = ConfigDict(from_attributes=True)

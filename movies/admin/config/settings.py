@@ -7,10 +7,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
 
+import environ
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
-
-import environ
 from split_settings.tools import include
 
 env = environ.Env(
@@ -20,7 +19,6 @@ env = environ.Env(
 
 # Инициализация Sentry SDK если есть env SENTRY_DSN
 if SENTRY_DSN := os.getenv("SENTRY_DSN"):
-
     sentry_sdk.init(
         dsn=SENTRY_DSN,
         enable_tracing=True,
