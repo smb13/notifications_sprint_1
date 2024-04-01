@@ -30,6 +30,7 @@ LOGGING_SETTINGS = {
 
 
 def logging_init():
+    """Инициализация логгера."""
     if int(settings.app.log_level) < logging.INFO:
         LOGGING_SETTINGS["root"]["level"] = logging.DEBUG
     logging_config.dictConfig(LOGGING_SETTINGS)

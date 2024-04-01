@@ -13,7 +13,9 @@ logging.basicConfig(level=20, format='%(asctime)s [%(levelname)s] [in %(filename
 
 fake = Faker(locale="en_US")
 
-WS_URL = "ws://127.0.0.1:8080"
+WS_URL = f"ws://{os.getenv('WEBSOCKET_SENDER_HOST')}:{os.getenv('WEBSOCKET_SENDER_PORT')}" if bool(
+    os.getenv('WEBSOCKET_SENDER_HOST')) and bool(os.getenv('WEBSOCKET_SENDER_PORT')) else "ws://127.0.0.1:8080"
+
 JWT_KEY = os.getenv("JWT_SECRET") if bool(os.getenv("JWT_SECRET")) else "BIG_BIG_SECRET"
 USER_UUID = fake.uuid4()
 
