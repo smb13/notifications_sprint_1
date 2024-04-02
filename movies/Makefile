@@ -1,5 +1,5 @@
 #!make
-.PHONY: admin auth etl db_dump tests external
+.PHONY: admin auth etl db_dump tests external websocket_sender
 
 include ./.env
 
@@ -226,6 +226,16 @@ mongo_config_routers_shards: # Конфигурация роутеров
 
 mongo_logs: # Журнал
 	docker compose $(DOCKER_COMPOSE_DEV) logs --tail 100 -f
+
+# Websocket sender
+
+websocket_sender: #
+	docker compose $(DOCKER_COMPOSE_DEV) up --build -d websocket-sender
+
+# Rabbit MQ
+
+rabbit: # Запустить брокер RabbitMQ
+	docker compose $(DOCKER_COMPOSE_DEV) up -d rabbit
 
 # Filebeat
 

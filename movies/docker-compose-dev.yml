@@ -183,6 +183,27 @@ services        :
     -   ./notification/src:/src
     command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload
 
+  websocket-sender:
+    extends:
+      file: docker-compose-base.yml
+      service: websocket-sender
+    ports:
+      - "${WEBSOCKET_SENDER_PORT}:8080"
+    volumes:
+      - ./websocket_sender/src:/app/src
+    depends_on:
+      - rabbit
+
+  rabbit:
+    extends:
+      file: docker-compose-base.yml
+      service: rabbit
+    ports:
+      - "${RABBIT_PORT}:5672"
+      - "${RABBIT_UI_PORT}:15672"
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq
+
   etl:
     extends:
       file: docker-compose-base.yml
@@ -280,3 +301,4 @@ volumes :
   mongo_db:
   es_logs_data:
   filebeat_data:
+  rabbit_data:

@@ -45,16 +45,19 @@ flowchart TB
     subgraph EventsService[Events Service]
         EPKAPI[EPK API]
         Rabbit[Rabbit MQ]
-        Worker
+        WorkerBuilder[Builder]
+        WSSender["Sender"]
+        EmailSender["Sender"]
         EPKAPI --> Rabbit
-        Rabbit --> Worker
+        Rabbit --> WorkerBuilder
+        WorkerBuilder --> Rabbit
+        Rabbit --> WSSender[WS Sender]
+        Rabbit --> EmailSender[Email Sender]
     end
 
     subgraph EPKService[Notification Service]
         Mailer["API"]
-        Sender["Sender"]
         DB[(Mongo DB)]
-        DB --> Sender
         Mailer --Сообщения--> DB
     end
 
@@ -71,13 +74,13 @@ flowchart TB
     
     adminInterface --Событие--> EPKAPI
 
-    Worker --Отправить оповещение--> Mailer
-    Worker --Запросить ФИО--> authAPI
-    Worker --Лайки и закладки--> ratingsAPI
-    Worker --Запросить пользователей и шаблон--> adminInterface
+%%    EmailSender --Отправить оповещение--> Mailer
+    WorkerBuilder --Запросить ФИО--> authAPI
+    WorkerBuilder --Лайки и закладки--> ratingsAPI
+    WorkerBuilder --Запросить пользователей и шаблон--> adminInterface
     
-    Sender --> Gateway["Email Gateway"]
-    Sender --Websocket--> User
-    Gateway --> User([User])
+    EmailSender --SMTP--> Gateway["Email Gateway"]
+    Gateway --SMTP--> User([User])
+    WSSender --Websocket--> User
 
 ```
