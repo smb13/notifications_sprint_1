@@ -28,8 +28,7 @@ async def lifespan(_: FastAPI) -> Any:
             port=rabbitmq_settings.port,
             virtual_host=rabbitmq_settings.virtual_host,
             username=rabbitmq_settings.username,
-            password=rabbitmq_settings.password,
-            message_ttl=rabbitmq_settings.message_ttl
+            password=rabbitmq_settings.password
             )
     rabbitmq.rmq_publisher.start()
 
@@ -48,9 +47,9 @@ app = FastAPI(
     # Название проекта, используемое в документации.
     title=settings.name,
     # Адрес документации (swagger).
-    docs_url="/notices/openapi",
+    docs_url="/api/openapi",
     # Адрес документации (openapi).
-    openapi_url="/notices/openapi.json",
+    openapi_url="/api/openapi.json",
     # Оптимизация работы с JSON-сериализатором.
     default_response_class=ORJSONResponse,
     # Указываем функцию, обработки жизненного цикла приложения.
@@ -60,7 +59,7 @@ app = FastAPI(
 )
 
 # Подключаем роутер к серверу с указанием префикса для API
-app.include_router(notices.router, prefix="/notices/v1")
+app.include_router(notices.router, prefix="/api/v1")
 app.include_router(health_check.router, prefix="/health_check/v1")
 
 if settings.enable_tracer:

@@ -21,7 +21,7 @@ class NoticeService:
 
     async def create_review_like(self, request: ReviewLikeRequest, x_request_id: str | None) -> NoticeCreationResponse:
         routing_key = ChannelType.PUSH.value + "." + Actions.REVIEW_LIKE.value
-        message = request.model_dump_json(exclude_none=True)
+        message = request.model_dump_json()
         return await self.publish_message(routing_key=routing_key, message=message, x_request_id=x_request_id)
 
     async def create_weekly_bookmarks(self,
@@ -29,7 +29,7 @@ class NoticeService:
                                       x_request_id: str | None
                                       ) -> NoticeCreationResponse:
         routing_key = ChannelType.EMAIL.value + "." + Actions.WEEKLY_BOOKMARKS.value
-        message = request.model_dump_json(exclude_none=True)
+        message = request.model_dump_json()
         return await self.publish_message(routing_key=routing_key, message=message, x_request_id=x_request_id)
 
     async def create_create_general_notice(self,
@@ -37,7 +37,7 @@ class NoticeService:
                                            x_request_id: str | None) -> NoticeCreationResponse:
         channel_type = request.type.value
         routing_key = channel_type + "." + Actions.GENERAL_NOTICE.value
-        message = request.model_dump_json(exclude_none=True, exclude={"type"})
+        message = request.model_dump_json()
         return await self.publish_message(routing_key=routing_key, message=message, x_request_id=x_request_id)
 
     async def publish_message(self, routing_key: str, message: str, x_request_id: str) -> NoticeCreationResponse:

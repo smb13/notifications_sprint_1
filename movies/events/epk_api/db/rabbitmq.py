@@ -27,12 +27,11 @@ def get_rmq_queues_list():
 
 
 class RmqPublisher(threading.Thread):
-    def __init__(self, exchange: str, queues: list, host: str, port: str, message_ttl: int,
+    def __init__(self, exchange: str, queues: list, host: str, port: str,
                  username: str, password: str, virtual_host: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.is_running = True
         self.exchange = exchange
-        self.message_ttl = message_ttl
         self.queues = queues
         self.connection = None
         self.channel = None
@@ -51,7 +50,7 @@ class RmqPublisher(threading.Thread):
         self.connection = BlockingConnection(parameters=self.params)
         self.channel = self.connection.channel()
         for queue in self.queues:
-            self.channel.queue_declare(queue=queue, durable=True, arguments={'x-message-ttl': self.message_ttl})
+            self.channel.queue_declare(queue=queue, durable=True)
 
     def run(self):
         self.connect()

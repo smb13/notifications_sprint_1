@@ -26,8 +26,14 @@ class BaseRequest(BaseModel):
 
     template_id: str | None = Field(
         None,
-        description="Id шаблона",
+        description="Id шаблона (опционально)",
         examples=["e083cf60-7698-493a-abd1-047fd401172d"],
+    )
+
+    subject: str = Field(
+        default="",
+        description="Тема письма",
+        examples=["Ну наконец то!"],
     )
 
 
@@ -48,6 +54,7 @@ class ReviewLikeRequest(BaseRequest):
     )
 
     review_id: str = Field(
+        default="",
         description="Id ревью",
         examples=["65f75b90463e3c418e6bec02"],
     )
@@ -66,12 +73,6 @@ class WeeklyBookmarksRequest(BaseRequest):
     Отправить нотификацию о закладках за неделю
     """
 
-    subject: str = Field(
-        default="",
-        description="Тема письма",
-        examples=["Ну наконец то!"],
-    )
-
     text: str = Field(
         default="",
         description="Текст сообщения",
@@ -86,15 +87,10 @@ class GeneralNoticeRequest(BaseRequest):
     Отправить пользователю(ям) сообщение
     """
 
-    user_id: str = Field(
+    user_id: str | None = Field(
+        default=None,
         description="Id пользователя",
         examples=["d091048f-87ba-4577-9387-82a4c3d6f6cd"],
-    )
-
-    subject: str = Field(
-        default="",
-        description="Тема письма",
-        examples=["Ну наконец то!"],
     )
 
     text: str = Field(

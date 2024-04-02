@@ -32,3 +32,55 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+
+  worker_1:
+    build:
+      context: ./worker
+      dockerfile: ./Dockerfile
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - RABBITMQ_CONSUME_QUEUE=email.general_notice
+    depends_on:
+      epk_api:
+        condition: service_healthy
+
+  worker_2:
+    build:
+      context: ./worker
+      dockerfile: ./Dockerfile
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - RABBITMQ_CONSUME_QUEUE=email.weekly_bookmarks
+    depends_on:
+      epk_api:
+        condition: service_healthy
+
+  worker_3:
+    build:
+      context: ./worker
+      dockerfile: ./Dockerfile
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - RABBITMQ_CONSUME_QUEUE=push.general_notice
+    depends_on:
+      epk_api:
+        condition: service_healthy
+
+  worker_4:
+    build:
+      context: ./worker
+      dockerfile: ./Dockerfile
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - RABBITMQ_CONSUME_QUEUE=push.review_like
+    depends_on:
+      epk_api:
+        condition: service_healthy

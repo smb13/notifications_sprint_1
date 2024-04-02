@@ -17,8 +17,10 @@ class Settings(BaseSettings):
     debug: bool = False
     enable_tracer: bool = False
 
-    authjwt_secret_key: str = Field(default="movies_token_secret")
-    authjwt_algorithm: str = Field(default="HS256")
+    authjwt_secret_key: str = Field(default="movies_token_secret", alias="JWT_ACCESS_TOKEN_SECRET_KEY")
+
+    jaeger_agent_port: int = 6831
+    jaeger_agent_host: str = "jaeger"
 
     model_config = SettingsConfigDict(extra="ignore")
 
@@ -31,7 +33,6 @@ class RabbitMQSettings(BaseSettings):
     port: str = Field(default="5672")
     exchange: str = Field(default="")
     virtual_host: str = Field(default="/")
-    message_ttl: int = Field(default=86400000)
 
     model_config = SettingsConfigDict(env_prefix="rabbitmq_", extra="ignore")
 

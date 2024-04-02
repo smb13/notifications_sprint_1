@@ -11,7 +11,7 @@ def configure_tracer() -> None:
     trace.get_tracer_provider().add_span_processor(
         BatchSpanProcessor(
             JaegerExporter(
-                agent_host_name="jaeger",
+                agent_host_name=settings.jaeger_agent_host,
                 agent_port=settings.jaeger_agent_port,
             ),
         ),
