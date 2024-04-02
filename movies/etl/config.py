@@ -1,16 +1,15 @@
-import os
 import logging
+import os
 
-from pydantic_settings import BaseSettings
 import sentry_sdk
+from pydantic_settings import BaseSettings
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 # Инициализация Sentry SDK если есть env SENTRY_DSN
 if SENTRY_DSN := os.getenv("SENTRY_DSN"):
-
     sentry_logging = LoggingIntegration(
         level=logging.WARNING,  # Захват логов уровня WARNING и выше
-        event_level=logging.ERROR  # Отправка событий в Sentry начиная с уровня ERROR
+        event_level=logging.ERROR,  # Отправка событий в Sentry начиная с уровня ERROR
     )
 
     sentry_sdk.init(

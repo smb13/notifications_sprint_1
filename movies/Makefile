@@ -115,6 +115,14 @@ external:  # Собрать и запустить контейнер External AP
 external_dev:  # Собрать и запустить тестовый контейнер External API (с зависимостями для разработки)
 	docker compose $(DOCKER_COMPOSE_DEV) up --build -d external_dev
 
+# Notification Service
+
+notification_dev:
+	docker compose $(DOCKER_COMPOSE_DEV) up --build -d
+
+notification_stop:
+	docker compose $(DOCKER_COMPOSE_DEV) stop
+
 # Auth
 
 auth:  # Собрать и запустить тестовый контейнер Auth (с зависимостями для разработки)
