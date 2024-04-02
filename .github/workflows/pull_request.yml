@@ -56,8 +56,9 @@ jobs:
           echo POSTGRES_AUTH_DB=${{ secrets.POSTGRES_AUTH_DB }} >> .env
           echo POSTGRES_PORT=${{ secrets.POSTGRES_PORT }} >> .env
           echo REDIS_PORT=${{ secrets.REDIS_PORT }} >> .env
-          echo REDIS_PORT_AUTH=${{ secrets.REDIS_PORT_AUTH }} >> .env
-          echo REDIS_STATES_DB=${{ secrets.REDIS_STATES_DB }} >> .env
+          echo REDIS_DB_MOVIES=${{ secrets.REDIS_DB_MOVIES }} >> .env
+          echo REDIS_DB_AUTH=${{ secrets.REDIS_DB_AUTH }} >> .env
+          echo REDIS_DB_ETL=${{ secrets.REDIS_DB_ETL }} >> .env
           echo DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }} >> .env
           echo LOCAL_USER=${{ secrets.LOCAL_USER }} >> .env
           echo LOCAL_USER_EMAIL=${{ secrets.LOCAL_USER_EMAIL }} >> .env

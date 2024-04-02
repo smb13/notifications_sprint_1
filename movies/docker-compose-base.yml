@@ -4,7 +4,7 @@ version        : '3.8'
 
 x-base-settings: &base-settings
   env_file: .env
-  restart: always
+  restart: on-failure:3
 
 
 x-elastic-envs : &elastic-envs
@@ -38,7 +38,17 @@ services       :
       context: ./admin
     <<: *base-settings
     volumes:
-    -   admin_data:/src/app/data
+    -   admin_data:/src/data
+
+  scheduler:
+    build:
+      context: ./scheduler
+    environment:
+      SERVICE_AUTH_API_BASE_PATH: http://auth_dev:8000/api/v1
+      OTEL_SERVICE_NAME: scheduler
+    <<: *base-settings
+    volumes:
+    -   scheduler_data:/src/data
 
   ratings:
     build:
@@ -82,26 +92,12 @@ services       :
       retries: 10
 
   redis:
-    image: redis:7.2.0-alpine
     <<: *base-settings
+    image: redis:7.2.0-alpine
     volumes:
     -   redis_data:/data
     expose:
     -   ${REDIS_PORT}
-    healthcheck:
-      test: redis-cli -c "PING"
-      start_period: 5s
-      interval: 2s
-      timeout: 1s
-      retries: 3
-
-  redis_auth:
-    image: redis:7.2.0-alpine
-    <<: *base-settings
-    volumes:
-    -   redis_data:/data
-    expose:
-    -   ${REDIS_PORT_AUTH}
     healthcheck:
       test: redis-cli -c "PING"
       start_period: 5s
@@ -121,8 +117,6 @@ services       :
   elasticsearch-logs:
     image: elasticsearch:8.12.2
     <<: [*base-settings, *elastic-envs]
-    ports:
-    -   9200:9200
     volumes:
     -   es_logs_data:/usr/share/elasticsearch/data
     healthcheck:

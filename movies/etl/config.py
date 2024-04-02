@@ -2,6 +2,7 @@ import logging
 import os
 
 import sentry_sdk
+from pydantic import Field
 from pydantic_settings import BaseSettings
 from sentry_sdk.integrations.logging import LoggingIntegration
 
@@ -28,8 +29,8 @@ class Settings(BaseSettings):
 
     elastic_port: int = 9200
 
-    redis_port: int
-    redis_states_db: int
+    redis_port: int = 6379
+    redis_db: int = Field(alias="REDIS_DB_ETL", default=2)
 
     batch_size: int = 100
 

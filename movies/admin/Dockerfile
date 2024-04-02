@@ -25,6 +25,6 @@ RUN django-admin compilemessages -l en -l ru
 EXPOSE 8000
 
 HEALTHCHECK --start-period=10s --interval=5s --timeout=2s --retries=10 \
-    CMD python ./manage.py migrate --check
+    CMD curl -f http://localhost:8000/healthcheck/
 
 CMD python manage.py migrate --noinput  && python manage.py collectstatic --noinput  && uwsgi --ini uwsgi.ini
