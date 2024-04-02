@@ -1,7 +1,24 @@
 ---
-version : '3.9'
+version         : '3.9'
 
-services:
+x-base-scheduler: &base-scheduler
+  extends:
+    file: docker-compose-base.yml
+    service: scheduler
+  environment:
+    DEBUG: true
+  depends_on:
+    postgres:
+      condition: service_healthy
+    auth_dev:
+      condition: service_started
+  logging:
+    driver: gelf
+    options:
+      gelf-address: udp://127.0.0.1:5044
+      tag: apps
+
+services        :
   external_dev:  # External API for development
     extends:
       file: docker-compose-base.yml
@@ -39,8 +56,9 @@ services:
     environment:
       DEBUG: true
       FORWARDED_ALLOW_IPS: '*'
+      REDIS_HOST: redis
     depends_on:
-      redis_auth:
+      redis:
         condition: service_healthy
       postgres:
         condition: service_healthy
@@ -74,12 +92,54 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      auth_dev:
+        condition: service_started
     command: sh -c "python ./manage.py migrate && python ./manage.py runserver 0.0.0.0:8000"
     logging:
       driver: gelf
       options:
         gelf-address: udp://127.0.0.1:5044
         tag: apps
+
+  scheduler:
+    <<: *base-scheduler
+    build:
+      context: ./scheduler
+      args:
+        REQUIREMENTS_DEV: true
+        COMPILE_MESSAGES: true
+    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && python ./manage.py runserver 0.0.0.0:8000"
+    ports:
+    -   8088:8000
+    volumes:
+    -   ./scheduler:/src
+    -   scheduler_data:/src/data
+    healthcheck:
+      test: curl -f http://localhost:8000/healthcheck/
+      start_period: 10s
+      interval: 5s
+      timeout: 2s
+      retries: 10
+
+  scheduler_beat:
+    <<: *base-scheduler
+    volumes:
+    -   ./scheduler:/src
+    command: sh -c "celery -A config worker -B -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+
+  flower:
+    <<: *base-scheduler
+    volumes:
+    -   ./scheduler:/src
+    depends_on:
+    -   scheduler_beat
+    -   redis
+    ports:
+    -   ${FLOWER_PORT_LOCAL}:${FLOWER_PORT}
+    environment:
+      FLOWER_UNAUTHENTICATED_API: 'true'
+      FLOWER_URL_PREFIX: ${FLOWER_URL_PREFIX}
+    command: sh -c "celery -A config flower"
 
   ratings_dev: # Ratings API for development
     extends:
@@ -144,6 +204,9 @@ services:
     extends:
       file: docker-compose-base.yml
       service: postgres
+    volumes:
+    -   ./db_dump:/etc/db_dump/
+    -   postgres_db:/var/lib/postgresql/data
     ports:
     -   5432:5432
 
@@ -151,16 +214,15 @@ services:
     extends:
       file: docker-compose-base.yml
       service: elastic
+    ports:
+    -   9200:9200
 
   redis:
     extends:
       file: docker-compose-base.yml
       service: redis
-
-  redis_auth:
-    extends:
-      file: docker-compose-base.yml
-      service: redis_auth
+    volumes:
+    -   redis_data:/data
 
   jaeger:
     extends:
@@ -173,27 +235,29 @@ services:
     volumes:
     -   mongo_db:/data/db
     ports:
-      - 27017:27017
-
-  elasticsearch-logs:
-    extends:
-      file: docker-compose-base.yml
-      service: elasticsearch-logs
+    -   27017:27017
 
   logstash:
     extends:
       file: docker-compose-base.yml
       service: logstash
+    environment:
+      ES_HOST: elasticsearch:9200
     depends_on:
-      elasticsearch-logs:
+      elastic:
         condition: service_healthy
+    volumes:
+    -   ./elk/logstash.conf:/usr/share/logstash/config/logstash.conf
+    -   ./elk/logstash/pipeline:/usr/share/logstash/pipeline
 
   kibana:
     extends:
       file: docker-compose-base.yml
       service: kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elastic:9200
     depends_on:
-      elasticsearch-logs:
+      elastic:
         condition: service_healthy
 
   filebeat:
@@ -203,6 +267,8 @@ services:
     depends_on:
     -   kibana
     -   logstash
+    volumes:
+    -   filebeat_data:/var/log/filebeat
 
 
 volumes :
@@ -210,6 +276,7 @@ volumes :
   es_data:
   redis_data:
   admin_data:
+  scheduler_data:
   mongo_db:
   es_logs_data:
   filebeat_data:

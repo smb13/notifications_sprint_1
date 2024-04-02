@@ -1,6 +1,7 @@
 import os
 from logging import config as logging_config
 
+from pydantic import Field
 from pydantic_settings import BaseSettings
 
 from core.logger import LOGGING
@@ -16,6 +17,7 @@ class Settings(BaseSettings):
     # Настройки Redis
     redis_host: str = "redis"
     redis_port: int = 6379
+    redis_db: int = Field(alias="REDIS_DB_MOVIES", default=0)
 
     # Настройки Elasticsearch
     elastic_host: str = "elastic"
