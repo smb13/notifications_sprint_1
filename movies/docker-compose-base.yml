@@ -45,6 +45,7 @@ services       :
       context: ./scheduler
     environment:
       SERVICE_AUTH_API_BASE_PATH: http://auth_dev:8000/api/v1
+      OTEL_SERVICE_NAME: scheduler
     <<: *base-settings
     volumes:
     -   scheduler_data:/src/data
