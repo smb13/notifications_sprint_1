@@ -190,7 +190,7 @@ services        :
     ports:
       - "${WEBSOCKET_SENDER_PORT}:8080"
     volumes:
-      - ./src:/app/src
+      - ./websocket_sender/src:/app/src
     depends_on:
       - rabbit
 

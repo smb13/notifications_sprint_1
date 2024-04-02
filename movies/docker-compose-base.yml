@@ -165,7 +165,7 @@ services       :
     container_name: websocket-sender
     <<: *base-settings
     build:
-      context: .
+      context: ./websocket_sender
     command: python /app/src/main.py
 
   rabbit:
