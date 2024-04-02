@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 from http import HTTPStatus
 
 import uvicorn
-from async_fastapi_jwt_auth import AuthJWT
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import ORJSONResponse
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
@@ -17,32 +16,32 @@ from db import mongo
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator:
     mongo.connect(settings.mongo_dsn)
-    mongo.mongo[settings.mongo_db][settings.mongo_rating_collection].create_index(
-        ["movie_id", "user_id"],
+    await mongo.mongo[settings.mongo_db][settings.mongo_notifications_collection].create_index(
+        ["id"],
         unique=True,
         background=True,
     )
-    mongo.mongo[settings.mongo_db][settings.mongo_review_collection].create_index(
-        ["movie_id", "user_id"],
-        unique=True,
+    await mongo.mongo[settings.mongo_db][settings.mongo_notifications_collection].create_index(
+        ["type", "delivered_at"],
+        unique=False,
         background=True,
     )
-    mongo.mongo[settings.mongo_db][settings.mongo_bookmarks_collection].create_index(
-        ["user_id", "movie_id"],
-        unique=True,
+    await mongo.mongo[settings.mongo_db][settings.mongo_notifications_collection].create_index(
+        ["type", "to", "delivered_at"],
+        unique=False,
+        background=True,
+    )
+    await mongo.mongo[settings.mongo_db][settings.mongo_notifications_collection].create_index(
+        ["mark"],
+        unique=False,
         background=True,
     )
     yield
     mongo.mongo.close()
 
 
-@AuthJWT.load_config
-def get_config() -> object:
-    return settings
-
-
 app = FastAPI(
-    title="API для онлайн-кинотеатра для оценок пользователей",
+    title="API для сервиса нотификаций",
     version="1.0.0",
     docs_url=settings.url_prefix + "/api/openapi",
     redoc_url=settings.url_prefix + "/api/redoc",
@@ -51,11 +50,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-configure_tracer()
-FastAPIInstrumentor.instrument_app(app)
-
-app.include_router(all_v1_routers)
-
 
 @app.middleware("http")
 async def before_request(request: Request, call_next: Callable) -> Response:
@@ -63,6 +57,10 @@ async def before_request(request: Request, call_next: Callable) -> Response:
         return ORJSONResponse(status_code=HTTPStatus.BAD_REQUEST, content={"detail": "X-Request-Id header is required"})
     return await call_next(request)
 
+
+app.include_router(all_v1_routers)
+configure_tracer()
+FastAPIInstrumentor.instrument_app(app)
 
 if __name__ == "__main__":
     uvicorn.run(

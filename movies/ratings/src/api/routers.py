@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
+from api.v1.bookmarks import router as bookmarks_router
 from api.v1.ratings import router as ratings_router
 from api.v1.reviews import router as reviews_router
-from api.v1.bookmarks import router as bookmarks_router
 from core.config import settings
 
 all_v1_routers = APIRouter()

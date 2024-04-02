@@ -27,14 +27,12 @@ jobs:
     -   name: Run flake8 linter
         run: |
           flake8 . --config=./tox.ini --format=html --htmldir=flake-report
-        continue-on-error: true
     -   name: Run mypy (Type check)
         run: |
           mypy --config-file=pyproject.toml .
-        continue-on-error: true
 
   tests:
-    if: success() || failure()
+    if: success()
     needs: lint-and-type-check
     runs-on: ubuntu-latest
     strategy:
