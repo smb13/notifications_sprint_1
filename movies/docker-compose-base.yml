@@ -161,6 +161,20 @@ services       :
       OTEL_SERVICE_NAME: notification-api
       MONGO_DSN: mongo
 
+  websocket-sender:
+    container_name: websocket-sender
+    <<: *base-settings
+    build:
+      context: .
+    command: python /app/src/main.py
+
+  rabbit:
+    image: rabbitmq:3.13-management
+    <<: *base-settings
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBIT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBIT_PASSWORD}
+
   nginx:  # For production
     image: nginx:1.25.2
     <<: *base-settings

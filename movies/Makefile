@@ -227,6 +227,15 @@ mongo_config_routers_shards: # Конфигурация роутеров
 mongo_logs: # Журнал
 	docker compose $(DOCKER_COMPOSE_DEV) logs --tail 100 -f
 
+# Websocket sender
+
+websocket_sender: #
+	docker compose $(DOCKER_COMPOSE_DEV) up --build -d websocket_sender
+
+# Rabbit MQ
+websocket_sender: #
+	docker compose $(DOCKER_COMPOSE_DEV) up -d rabbit
+
 # Filebeat
 
 filebeat_dev: # Отобразить логи заданного приложения

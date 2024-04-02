@@ -1,20 +1,12 @@
 # WebSocket Sender
 
-Отправка уведомлений по вебсокету
-
-## Запуск
-
-```bash
-make up PROFILES='--profile websocket'
-```
-
 ## Отправка сообщений
 
 Для отправки сообщений, нужно сначала отправить jwt токен для доступа к сервису
 
 ```json
 {
-  "jwt_token": <jwt_here>
+  "jwt_token": "jwt_here"
 }
 ```
 

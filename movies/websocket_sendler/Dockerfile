@@ -3,7 +3,6 @@ FROM python:3.11-slim as base
 ENV PYTHONPATH="/app:$PYTHONPATH"
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-#ARG REQUIREMENTS_DEV=False
 
 WORKDIR /app
 
@@ -19,9 +18,7 @@ RUN apt-get update &&  \
     && pip install -U pip \
     && pip install -r requirements.txt
 
-RUN if "$REQUIREMENTS_DEV" ; then pip install -r /requirements.dev.txt ; fi
-
-COPY ./src /app/src/
+COPY src /app/src/
 
 FROM builder as final
 
