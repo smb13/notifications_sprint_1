@@ -19,7 +19,7 @@ description = """Information about films, genres and people involved in the crea
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:
-    redis.redis = Redis(host=settings.redis_host, port=settings.redis_port)
+    redis.redis = Redis(host=settings.redis_host, port=settings.redis_port, db=settings.redis_db)
     elastic.es = AsyncElasticsearch(
         hosts=[{"host": settings.elastic_host, "port": settings.elastic_port, "scheme": "http"}],
     )

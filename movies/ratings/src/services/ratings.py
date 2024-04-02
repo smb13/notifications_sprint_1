@@ -23,31 +23,53 @@ class RatingsService(BaseService):
         await self.set_rating(movie_id, 1)
 
     async def set_rating(self, movie_id: UUID, rating: int) -> None:
-        await self.db().update_one({
-            'movie_id': bson.Binary.from_uuid(movie_id),
-            'user_id': (await self.jwt.get_raw_jwt())['sub']
-        }, {'$set': {'rating': rating}}, upsert=True)
+        await self.db().update_one(
+            {
+                "movie_id": bson.Binary.from_uuid(movie_id),
+                "user_id": (await self.jwt.get_raw_jwt())["sub"],
+            },
+            {"$set": {"rating": rating}},
+            upsert=True,
+        )
 
     async def remove_rating(self, movie_id: UUID) -> None:
-        await self.db().update_one({
-            'movie_id': bson.Binary.from_uuid(movie_id),
-            'user_id': (await self.jwt.get_raw_jwt())['sub']
-        }, {'$unset': {'rating': 1}})
+        await self.db().update_one(
+            {
+                "movie_id": bson.Binary.from_uuid(movie_id),
+                "user_id": (await self.jwt.get_raw_jwt())["sub"],
+            },
+            {"$unset": {"rating": 1}},
+        )
 
     async def get_rating(self, movie_id: UUID) -> RatingsResponse:
         try:
-            return RatingsResponse(** await self.db().aggregate([
-                {"$match": {"movie_id": bson.Binary.from_uuid(movie_id)}},
-                {"$group": {
-                    "_id": "$movie_id",
-                    "total": {"$sum": 1},
-                    "likes": {"$sum": {"$cond": [{"$eq": ["$rating", 10]}, 1, 0]}},
-                    "dislikes": {"$sum": {"$cond": [{"$eq": ["$rating", 1]}, 1, 0]}},
-                    "average": {"$avg": "$rating"},
-                    "rating": {
-                        "$sum": {
-                            "$cond": [{"$eq": ["$user_id", (await self.jwt.get_raw_jwt())['sub']]}, "$rating", 0]}}}}
-            ]).next())  # Тут возможен только один элемент в ответе.
+            return RatingsResponse(
+                **await self.db()
+                .aggregate(
+                    [
+                        {"$match": {"movie_id": bson.Binary.from_uuid(movie_id)}},
+                        {
+                            "$group": {
+                                "_id": "$movie_id",
+                                "total": {"$sum": 1},
+                                "likes": {"$sum": {"$cond": [{"$eq": ["$rating", 10]}, 1, 0]}},
+                                "dislikes": {"$sum": {"$cond": [{"$eq": ["$rating", 1]}, 1, 0]}},
+                                "average": {"$avg": "$rating"},
+                                "rating": {
+                                    "$sum": {
+                                        "$cond": [
+                                            {"$eq": ["$user_id", (await self.jwt.get_raw_jwt())["sub"]]},
+                                            "$rating",
+                                            0,
+                                        ],
+                                    },
+                                },
+                            },
+                        },
+                    ],
+                )
+                .next(),
+            )  # Тут возможен только один элемент в ответе.
         except StopAsyncIteration:
             return RatingsResponse(average=0)
 

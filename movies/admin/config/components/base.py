@@ -21,7 +21,7 @@ SECRET_KEY = env("DJANGO_SECRET_KEY", default="NO_SECRET")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG", default=False)
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "admin", "admin.localhost"]
+ALLOWED_HOSTS = ["127.0.0.1", "0.0.0.0", "localhost", "admin", "admin.localhost"]
 
 INTERNAL_IPS = ["127.0.0.1"]
 

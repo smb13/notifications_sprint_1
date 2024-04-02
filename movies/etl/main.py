@@ -21,7 +21,7 @@ if __name__ == "__main__":
     redis_dsn = {
         "host": "redis",
         "port": settings.redis_port,
-        "db": settings.redis_states_db,
+        "db": settings.redis_db,
     }
     elastic_host = {
         "host": "elastic",

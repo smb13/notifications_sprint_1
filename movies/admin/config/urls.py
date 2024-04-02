@@ -21,8 +21,11 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 
+from utils.views import health_check_view
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("healthcheck/", health_check_view),
 ]
 
 if settings.ENABLE_SILK:
