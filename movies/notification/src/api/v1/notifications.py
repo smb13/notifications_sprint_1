@@ -2,11 +2,11 @@ import uuid
 from http import HTTPStatus
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Path, Body, Query
+from fastapi import APIRouter, Body, Depends, Path, Query
 
 from core.config import settings
 from schemas.notifications import EmailNotification, PushNotification, PushNotificationsListResponse
-from services.notifications import get_notifications_service, NotificationsService
+from services.notifications import NotificationsService, get_notifications_service
 
 router = APIRouter(redirect_slashes=False)
 
@@ -56,7 +56,10 @@ async def get_notifications_history(
     user_id: str = Path(..., description="Идентификатор пользователя", example="test@test.com"),
     page: int = Query(default=1, description="Pagination page number", ge=1),
     page_size: int = Query(
-        default=settings.page_size, description="Pagination page size", ge=1, le=settings.page_size_max
+        default=settings.page_size,
+        description="Pagination page size",
+        ge=1,
+        le=settings.page_size_max,
     ),
     notifications_service: NotificationsService = Depends(get_notifications_service),
 ) -> PushNotificationsListResponse:
