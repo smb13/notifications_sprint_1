@@ -1,22 +1,23 @@
 from collections.abc import Generator
-from typing import List, Dict, Tuple
 
-from typing_extensions import TypeVar
-
-from core.logger import logger
 from process.decorator import coroutine
 from store import models
 from store.rabbitmq.consumer import RabbitMQConsumer
 from store.rabbitmq.publisher import RabbitMQPublisher
+from typing_extensions import TypeVar
+
+from core.logger import logger
 
 ModelsSchemas = TypeVar("ModelsSchemas", bound=models)
 
 
-class NotificationLoader(object):
+class NotificationLoader:
     @coroutine
-    def run(self, publisher: RabbitMQPublisher, consumer: RabbitMQConsumer) -> Generator[
-        None, Tuple[RabbitMQConsumer, RabbitMQPublisher, List[Dict[str, str | ModelsSchemas]]], None
-    ]:
+    def run(
+        self,
+        publisher: RabbitMQPublisher,
+        consumer: RabbitMQConsumer,
+    ) -> Generator[None, tuple[RabbitMQConsumer, RabbitMQPublisher, list[dict[str, str | ModelsSchemas]]], None]:
         while notification_messages := (yield):  # type: ignore
             acked_rmq_messages = []
             mess_counter = 0
@@ -24,7 +25,7 @@ class NotificationLoader(object):
                 try:
                     publisher.publish(
                         message=notification_message.get("message").model_dump_json(),
-                        x_request_id=notification_message.get("headers").get("X-Request-Id")
+                        x_request_id=notification_message.get("headers").get("X-Request-Id"),
                     )
                     delivery_tag = notification_message.get("delivery_tag")
                     if delivery_tag not in acked_rmq_messages:

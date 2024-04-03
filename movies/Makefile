@@ -227,6 +227,16 @@ mongo_config_routers_shards: # Конфигурация роутеров
 mongo_logs: # Журнал
 	docker compose $(DOCKER_COMPOSE_DEV) logs --tail 100 -f
 
+# Events EPK Services
+
+epk_dev: epk_api_dev epk_workers_dev # Запустить сервисы EPK
+
+epk_api_dev:
+	docker compose $(DOCKER_COMPOSE_DEV) up --build -d epk_api
+
+epk_workers_dev:
+	docker compose $(DOCKER_COMPOSE_DEV) up --build -d worker_email_general_notice worker_email_weekly_bookmarks worker_push_general_notice worker_push_review_like
+
 # Websocket sender
 
 websocket_sender: #

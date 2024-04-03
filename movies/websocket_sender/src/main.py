@@ -1,10 +1,10 @@
 import asyncio
-import websockets
 
-from src.core.logger import logger
+import websockets
 from src.core.config import settings
-from src.sendlers.websocket import handler
+from src.core.logger import logger
 from src.sendlers.rabbit import process_notifications
+from src.sendlers.websocket import handler
 
 
 async def main():

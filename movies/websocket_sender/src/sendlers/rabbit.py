@@ -1,11 +1,10 @@
 import asyncio
 
+import backoff
 from aio_pika import connect
 from aiormq import AMQPConnectionError
-import backoff
-
-from src.core.logger import logger
 from src.core.config import settings
+from src.core.logger import logger
 from src.sendlers.websocket import send_by_websocket
 
 

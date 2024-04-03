@@ -1,6 +1,10 @@
 ---
 version         : '3.9'
 
+x-base-settings : &base-settings
+  env_file: .env
+  restart: on-failure:3
+
 x-base-scheduler: &base-scheduler
   extends:
     file: docker-compose-base.yml
@@ -25,6 +29,7 @@ services        :
       service: external
     build:
       context: ./external
+      network: host
       args:
         REQUIREMENTS_DEV: true
     depends_on:
@@ -51,6 +56,7 @@ services        :
       service: auth
     build:
       context: ./auth
+      network: host
       args:
         REQUIREMENTS_DEV: true
     environment:
@@ -79,6 +85,7 @@ services        :
       service: admin
     build:
       context: ./admin
+      network: host
       args:
         REQUIREMENTS_DEV: true
     environment:
@@ -105,6 +112,7 @@ services        :
     <<: *base-scheduler
     build:
       context: ./scheduler
+      network: host
       args:
         REQUIREMENTS_DEV: true
         COMPILE_MESSAGES: true
@@ -147,6 +155,7 @@ services        :
       service: ratings
     build:
       context: ./ratings
+      network: host
       args:
         REQUIREMENTS_DEV: true
     depends_on:
@@ -173,6 +182,7 @@ services        :
       service: notification
     build:
       context: ./notification
+      network: host
       args:
         REQUIREMENTS_DEV: true
     environment:
@@ -188,21 +198,21 @@ services        :
       file: docker-compose-base.yml
       service: websocket-sender
     ports:
-      - "${WEBSOCKET_SENDER_PORT}:8080"
+    -   ${WEBSOCKET_SENDER_PORT}:8080
     volumes:
-      - ./websocket_sender/src:/app/src
+    -   ./websocket_sender/src:/app/src
     depends_on:
-      - rabbit
+    -   rabbit
 
   rabbit:
     extends:
       file: docker-compose-base.yml
       service: rabbit
     ports:
-      - "${RABBIT_PORT}:5672"
-      - "${RABBIT_UI_PORT}:15672"
+    -   ${RABBIT_PORT}:5672
+    -   ${RABBIT_UI_PORT}:15672
     volumes:
-      - rabbit_data:/var/lib/rabbitmq
+    -   rabbit_data:/var/lib/rabbitmq
 
   etl:
     extends:
@@ -291,8 +301,55 @@ services        :
     volumes:
     -   filebeat_data:/var/log/filebeat
 
+  epk_api:
+    extends:
+      file: events/docker-compose-dev.yml
+      service: epk_api
+    <<: *base-settings
+    depends_on:
+      rabbit:
+        condition: service_healthy
+    ports:
+    -   8001:8000
 
-volumes :
+  worker_email_general_notice:
+    extends:
+      file: events/docker-compose-dev.yml
+      service: worker_email_general_notice
+    <<: *base-settings
+    depends_on:
+      rabbit:
+        condition: service_healthy
+
+  worker_email_weekly_bookmarks:
+    extends:
+      file: events/docker-compose-dev.yml
+      service: worker_email_weekly_bookmarks
+    <<: *base-settings
+    depends_on:
+      rabbit:
+        condition: service_healthy
+
+  worker_push_general_notice:
+    extends:
+      file: events/docker-compose-dev.yml
+      service: worker_push_general_notice
+    <<: *base-settings
+    depends_on:
+      rabbit:
+        condition: service_healthy
+
+  worker_push_review_like:
+    extends:
+      file: events/docker-compose-dev.yml
+      service: worker_push_review_like
+    <<: *base-settings
+    depends_on:
+      rabbit:
+        condition: service_healthy
+
+
+volumes         :
   postgres_db:
   es_data:
   redis_data:

@@ -1,9 +1,8 @@
 import json
 
+import websockets
 from aio_pika.abc import AbstractIncomingMessage
 from pydantic import ValidationError
-import websockets
-
 from src.core.logger import logger
 from src.models.notifications import WebSocketNotification
 from src.utils.decode_jwt import decode_jwt_and_get_userid

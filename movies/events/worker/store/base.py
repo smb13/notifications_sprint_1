@@ -15,6 +15,6 @@ class BaseAccessor(metaclass=ABCMeta):
 
 class BadResponse(Exception):
     """Неподходящий ответ"""
+
     def __init__(self, *args, **kwargs):
         pass
-

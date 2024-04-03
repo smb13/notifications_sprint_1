@@ -10,7 +10,7 @@ def get_config():
     return authjwt_settings
 
 
-class JWTGetter(object):
+class JWTGetter:
     def __init__(self):
         self.headers = self.get_new_headers()
 
@@ -23,8 +23,10 @@ class JWTGetter(object):
         заменен на получение токена через сервис auth c авторизацией через сервисную учетную запись.
         """
         jwt = AuthJWT()
-        access_token = jwt.create_access_token(subject=str(uuid4()),
-                                                    user_claims={"sub": "username:user@yandex.ru", "roles": ["admin"]})
+        access_token = jwt.create_access_token(
+            subject=str(uuid4()),
+            user_claims={"sub": "username:user@yandex.ru", "roles": ["admin"]},
+        )
         return {"Authorization": "Bearer " + access_token.decode()}
 
 

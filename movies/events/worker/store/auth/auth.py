@@ -1,23 +1,25 @@
-import backoff
 from http import HTTPStatus
-import requests
 
-from core.config import settings
-from core.logger import logger
+import backoff
+import requests
 from store.base import BadResponse
 from store.security import jwt_getter
 
+from core.config import settings
+from core.logger import logger
 
-class AuthRequest(object):
+
+class AuthRequest:
     def __init__(self):
-        self.url = f"http://{settings.auth_host}:{settings.auth_port}" + \
-                               f"{settings.auth_get_users_endpoint}/"
+        self.url = f"http://{settings.auth_host}:{settings.auth_port}" + f"{settings.auth_get_users_endpoint}/"
         self.headers = jwt_getter.get_headers()
 
-    @backoff.on_exception(backoff.expo,
-                          requests.exceptions.RequestException,
-                          logger=logger,
-                          max_tries=settings.external_api_backoff_max_tries)
+    @backoff.on_exception(
+        backoff.expo,
+        requests.exceptions.RequestException,
+        logger=logger,
+        max_tries=settings.external_api_backoff_max_tries,
+    )
     def get_user_details(self, user_id: str) -> [str, str, str]:
         # убрать моковое поведение для теста
         return "user@yandex.ru", "Вася", "Пупкин"
@@ -29,4 +31,3 @@ class AuthRequest(object):
             raise requests.exceptions.RequestException
         else:
             raise BadResponse("response.status_code")
-

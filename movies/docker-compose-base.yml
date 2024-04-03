@@ -20,6 +20,7 @@ services       :
   external:
     build:
       context: ./external
+      network: host
     <<: *base-settings
     environment:
       PORT: 8000
@@ -28,6 +29,7 @@ services       :
   auth:
     build:
       context: ./auth
+      network: host
     <<: *base-settings
     environment:
       PORT: 8000
@@ -36,6 +38,7 @@ services       :
   admin:
     build:
       context: ./admin
+      network: host
     <<: *base-settings
     volumes:
     -   admin_data:/src/data
@@ -43,6 +46,7 @@ services       :
   scheduler:
     build:
       context: ./scheduler
+      network: host
     environment:
       SERVICE_AUTH_API_BASE_PATH: http://auth_dev:8000/api/v1
       OTEL_SERVICE_NAME: scheduler
@@ -53,6 +57,7 @@ services       :
   ratings:
     build:
       context: ./ratings
+      network: host
     <<: *base-settings
     environment:
       PORT: 8080
@@ -62,6 +67,7 @@ services       :
   etl:
     build:
       context: etl
+      network: host
     <<: *base-settings
     volumes:
     -   ./etl/:/src/app/
@@ -147,12 +153,14 @@ services       :
   filebeat:
     build:
       context: ./elk/filebeat
+      network: host
     volumes:
     -   filebeat_data:/var/log/filebeat
 
   notification: # External API for production
     build:
       context: ./notification
+      network: host
     restart: always
     env_file:
     -   .env
@@ -166,14 +174,20 @@ services       :
     <<: *base-settings
     build:
       context: ./websocket_sender
+      network: host
     command: python /app/src/main.py
 
   rabbit:
     image: rabbitmq:3.13-management
     <<: *base-settings
     environment:
-      - RABBITMQ_DEFAULT_USER=${RABBIT_USER}
-      - RABBITMQ_DEFAULT_PASS=${RABBIT_PASSWORD}
+    -   RABBITMQ_DEFAULT_USER=${RABBIT_USER}
+    -   RABBITMQ_DEFAULT_PASS=${RABBIT_PASSWORD}
+    healthcheck:
+      test: rabbitmq-diagnostics -q status && rabbitmq-diagnostics -q check_local_alarms
+      interval: 60s
+      timeout: 30s
+      retries: 3
 
   nginx:  # For production
     image: nginx:1.25.2

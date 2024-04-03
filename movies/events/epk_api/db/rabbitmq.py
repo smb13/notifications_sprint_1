@@ -2,9 +2,9 @@ import threading
 from enum import Enum
 
 import backoff
-from pika import ConnectionParameters, BlockingConnection, PlainCredentials
+from pika import BlockingConnection, ConnectionParameters, PlainCredentials
 from pika.delivery_mode import DeliveryMode
-from pika.exceptions import AMQPError, AMQPConnectionError
+from pika.exceptions import AMQPConnectionError, AMQPError
 from pika.spec import BasicProperties
 
 from core.config import rabbitmq_settings
@@ -27,8 +27,18 @@ def get_rmq_queues_list():
 
 
 class RmqPublisher(threading.Thread):
-    def __init__(self, exchange: str, queues: list, host: str, port: str,
-                 username: str, password: str, virtual_host: str, *args, **kwargs):
+    def __init__(
+        self,
+        exchange: str,
+        queues: list,
+        host: str,
+        port: str,
+        username: str,
+        password: str,
+        virtual_host: str,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.is_running = True
         self.exchange = exchange
@@ -41,8 +51,8 @@ class RmqPublisher(threading.Thread):
             virtual_host=virtual_host,
             credentials=PlainCredentials(
                 username=username,
-                password=password
-            )
+                password=password,
+            ),
         )
 
     @backoff.on_exception(**rabbitmq_settings.get_backoff_settings())
@@ -67,19 +77,25 @@ class RmqPublisher(threading.Thread):
                 exchange=self.exchange,
                 routing_key=routing_key,
                 body=message,
-                properties=BasicProperties(content_type='application/json',
-                                           delivery_mode=DeliveryMode.Persistent,
-                                           headers={"X-Request-Id": x_request_id}),
-                mandatory=True
+                properties=BasicProperties(
+                    content_type="application/json",
+                    delivery_mode=DeliveryMode.Persistent,
+                    headers={"X-Request-Id": x_request_id},
+                ),
+                mandatory=True,
             )
         except AMQPConnectionError:
             self.connect()
             raise AMQPError
 
     def publish(self, routing_key: str, message: str, x_request_id: str):
-        self.connection.add_callback_threadsafe(lambda: self._publish(routing_key=routing_key,
-                                                                      message=message,
-                                                                      x_request_id=x_request_id))
+        self.connection.add_callback_threadsafe(
+            lambda: self._publish(
+                routing_key=routing_key,
+                message=message,
+                x_request_id=x_request_id,
+            ),
+        )
 
     def stop(self):
         self.is_running = False
