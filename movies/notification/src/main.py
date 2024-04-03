@@ -10,6 +10,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from api.routers import all_v1_routers
 from core.config import settings
 from core.tracer import configure_tracer
+
 from db import mongo
 
 
@@ -17,28 +18,19 @@ from db import mongo
 async def lifespan(_: FastAPI) -> AsyncGenerator:
     mongo.connect(settings.mongo_dsn)
     await mongo.mongo[settings.mongo_db][settings.mongo_notifications_collection].create_index(
-        ["id"],
-        unique=True,
-        background=True,
+        ['id'], unique=True, background=True
     )
     await mongo.mongo[settings.mongo_db][settings.mongo_notifications_collection].create_index(
-        ["type", "delivered_at"],
-        unique=False,
-        background=True,
+        ['type', 'delivered_at'], unique=False, background=True
     )
     await mongo.mongo[settings.mongo_db][settings.mongo_notifications_collection].create_index(
-        ["type", "to", "delivered_at"],
-        unique=False,
-        background=True,
+        ['type', 'to', 'delivered_at'], unique=False, background=True
     )
     await mongo.mongo[settings.mongo_db][settings.mongo_notifications_collection].create_index(
-        ["mark"],
-        unique=False,
-        background=True,
+        ['mark'], unique=False, background=True
     )
     yield
     mongo.mongo.close()
-
 
 app = FastAPI(
     title="API для сервиса нотификаций",
@@ -57,12 +49,13 @@ async def before_request(request: Request, call_next: Callable) -> Response:
         return ORJSONResponse(status_code=HTTPStatus.BAD_REQUEST, content={"detail": "X-Request-Id header is required"})
     return await call_next(request)
 
-
 app.include_router(all_v1_routers)
-configure_tracer()
+
 FastAPIInstrumentor.instrument_app(app)
 
 if __name__ == "__main__":
+    if settings.enable_tracer:
+        configure_tracer()
     uvicorn.run(
         "main:app",
         host="0.0.0.0",

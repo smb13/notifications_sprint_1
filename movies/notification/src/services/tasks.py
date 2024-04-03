@@ -18,60 +18,47 @@ class TasksService(BaseService):
     Класс для реализации логики работы с задачами.
     """
 
-    async def get_push_tasks(self, clients: list[str]) -> list[PushNotification]:
+    async def get_push_tasks(self, clients) -> list[PushNotification]:
         mark = uuid.uuid4()
-        result = await self.db().update_many(
+        a = await self.db().update_many(
             {
                 "type": "push",
-                "$or": [
-                    {"updated_at": None},
-                    {
-                        "updated_at": {
-                            "$lt": datetime.datetime.utcnow() - datetime.timedelta(seconds=settings.send_timeout),
-                        },
-                    },
-                ],
-                "delivered_at": None,
-                "to": {"$in": clients},
-            },
-            {"$set": {"updated_at": datetime.datetime.utcnow(), "mark": str(mark)}},
+                '$or': [
+                    {'updated_at': None},
+                    {'updated_at': {
+                        '$lt': datetime.datetime.utcnow() - datetime.timedelta(seconds=settings.send_timeout)}}],
+                'delivered_at': None,
+                'to': {'$in': clients}},
+            {'$set': {'updated_at': datetime.datetime.utcnow(), 'mark': str(mark)}}
         )
-        if result.modified_count == 0:
+        if a.modified_count == 0:
             return []
-        return [
-            PushNotification(**task)
-            for task in await self.db().find({"mark": str(mark)}).to_list(result.modified_count)
-        ]
+        return [PushNotification(**task) for task in
+                await self.db().find({'mark': str(mark)}).to_list(a.modified_count)]
 
     async def get_email_task(self) -> list[EmailNotification]:
         mark = uuid.uuid4()
-        result = await self.db().update_one(
+        a = await self.db().update_one(
             {
-                "type": "email",
-                "$or": [
-                    {"updated_at": None},
-                    {
-                        "updated_at": {
-                            "$lt": datetime.datetime.utcnow() - datetime.timedelta(seconds=settings.send_timeout),
-                        },
-                    },
-                ],
-                "delivered_at": None,
+                'type': 'email',
+                '$or': [
+                    {'updated_at': None},
+                    {'updated_at': {
+                        '$lt': datetime.datetime.utcnow() - datetime.timedelta(seconds=settings.send_timeout)}}],
+                'delivered_at': None
             },
-            {"$set": {"updated_at": datetime.datetime.utcnow(), "mark": str(mark)}},
+            {'$set': {'updated_at': datetime.datetime.utcnow(), 'mark': str(mark)}}
         )
-        if result.modified_count == 0:
+        if a.modified_count == 0:
             return []
-        return [
-            EmailNotification(**task)
-            for task in await self.db().find({"mark": str(mark)}).to_list(result.modified_count)
-        ]
+        return [EmailNotification(**task) for task in
+                await self.db().find({'mark': str(mark)}).to_list(a.modified_count)]
 
-    async def confirm(self, notifications: list[uuid.UUID]) -> None:
+    async def confirm(self, notifications) -> None:
         await self.db().update_many(
-            {"id": {"$in": [bson.Binary.from_uuid(notification_id) for notification_id in notifications]}},
-            {"$set": {"delivered_at": datetime.datetime.utcnow()}},
-            upsert=True,
+            {'id': {'$in': [bson.Binary.from_uuid(notification_id) for notification_id in notifications]}},
+            {'$set': {'delivered_at': datetime.datetime.utcnow()}},
+            upsert=True
         )
 
 
