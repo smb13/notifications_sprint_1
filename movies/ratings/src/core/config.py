@@ -12,7 +12,9 @@ logging_config.dictConfig(LOGGING)
 
 class Settings(BaseSettings):
     url_prefix: str = ""
+
     debug: bool = False
+    enable_tracer: bool = False
 
     authjwt_secret_key: str = Field(..., alias="JWT_ACCESS_TOKEN_SECRET_KEY")
 
