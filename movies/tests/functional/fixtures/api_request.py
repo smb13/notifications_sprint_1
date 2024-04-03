@@ -26,6 +26,8 @@ async def session():
 def service_url(service: str = "external"):
     if service == "external":
         return test_settings.service_url
+    elif service == "notifications":
+        return test_settings.notifications_url
     return test_settings.ratings_url
 
 

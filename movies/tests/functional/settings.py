@@ -14,6 +14,7 @@ class TestSettings(BaseSettings):
     # Должно соответствовать URL приложения в контейнере
     service_url: str = "http://external_dev:8000"
     ratings_url: str = "http://ratings_dev:8080"
+    notifications_url: str = "http://notifications_dev:8000"
 
     # Настройки приложения
     page_size: int = 10
