@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     jaeger_agent_port: int = 6831
     jaeger_agent_host: str = "jaeger"
 
-    page_size: int = 50
+    page_size: int = 50*60*60
     page_size_max: int = 100
 
     send_timeout: int = 5
