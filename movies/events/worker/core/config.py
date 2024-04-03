@@ -1,4 +1,4 @@
-import os
+from typing import Any
 
 import backoff
 from pika.exceptions import AMQPError
@@ -47,11 +47,12 @@ class Settings(BaseSettings):
 # Класс настройки RabbitMQ
 class RabbitMQSettings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="rabbitmq_", extra="ignore"
+        env_prefix="rabbit_",
+        extra="ignore",
     )
 
-    username: str = Field(alias="RABBITMQ_DEFAULT_USER")
-    password: str = Field(alias="RABBITMQ_DEFAULT_PASS")
+    username: str = Field(alias="RABBIT_USER")
+    password: str = Field(alias="RABBIT_PASSWORD")
     host: str = Field(default="rabbitmq")
     port: str = Field(default="5672")
     consume_exchange: str = Field(default="consume")
@@ -64,21 +65,21 @@ class RabbitMQSettings(BaseSettings):
     consume_queue: str = Field(default="push.review_like")
     publish_queue_suffix: str = Field(default=".sender")
 
-    def get_dsn(self):
+    def get_dsn(self) -> str:
         return f"amqp://{self.username}:{self.password}@{self.host}:{self.port}{self.virtual_host}"
 
     @staticmethod
-    def get_backoff_settings():
+    def get_backoff_settings() -> dict[str, Any]:
         """
         Получение настроек для backoff
         """
         return {
-            'wait_gen': backoff.expo,
-            'exception': AMQPError,
-            'base': 2,
-            'factor': 1,
-            'max_value': 60,
-            'max_tries': 30
+            "wait_gen": backoff.expo,
+            "exception": AMQPError,
+            "base": 2,
+            "factor": 1,
+            "max_value": 60,
+            "max_tries": 30,
         }
 
 

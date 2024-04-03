@@ -5,8 +5,8 @@ from async_fastapi_jwt_auth import AuthJWT
 from fastapi import Depends, HTTPException
 from pika.exceptions import AMQPError
 
-from db.rabbitmq import get_publishers, Actions, RmqPublisher
-from schemas.requests import ReviewLikeRequest, WeeklyBookmarksRequest, GeneralNoticeRequest, ChannelType
+from db.rabbitmq import Actions, RmqPublisher, get_publishers
+from schemas.requests import ChannelType, GeneralNoticeRequest, ReviewLikeRequest, WeeklyBookmarksRequest
 from schemas.responses import NoticeCreationResponse
 
 
@@ -24,17 +24,20 @@ class NoticeService:
         message = request.model_dump_json()
         return await self.publish_message(routing_key=routing_key, message=message, x_request_id=x_request_id)
 
-    async def create_weekly_bookmarks(self,
-                                      request: WeeklyBookmarksRequest,
-                                      x_request_id: str | None
-                                      ) -> NoticeCreationResponse:
+    async def create_weekly_bookmarks(
+        self,
+        request: WeeklyBookmarksRequest,
+        x_request_id: str | None,
+    ) -> NoticeCreationResponse:
         routing_key = ChannelType.EMAIL.value + "." + Actions.WEEKLY_BOOKMARKS.value
         message = request.model_dump_json()
         return await self.publish_message(routing_key=routing_key, message=message, x_request_id=x_request_id)
 
-    async def create_create_general_notice(self,
-                                           request: GeneralNoticeRequest,
-                                           x_request_id: str | None) -> NoticeCreationResponse:
+    async def create_create_general_notice(
+        self,
+        request: GeneralNoticeRequest,
+        x_request_id: str | None,
+    ) -> NoticeCreationResponse:
         channel_type = request.type.value
         routing_key = channel_type + "." + Actions.GENERAL_NOTICE.value
         message = request.model_dump_json()

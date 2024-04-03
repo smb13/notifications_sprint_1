@@ -51,8 +51,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-configure_tracer()
-FastAPIInstrumentor.instrument_app(app)
+if settings.enable_tracer:
+    configure_tracer()
+    FastAPIInstrumentor.instrument_app(app)
 
 app.include_router(all_v1_routers)
 

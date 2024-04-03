@@ -1,11 +1,11 @@
 from http import HTTPStatus
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header
 from fastapi.security import HTTPBearer
-from typing_extensions import Annotated
 
 from schemas.error import HttpExceptionModel
-from schemas.requests import ReviewLikeRequest, WeeklyBookmarksRequest, GeneralNoticeRequest
+from schemas.requests import GeneralNoticeRequest, ReviewLikeRequest, WeeklyBookmarksRequest
 from schemas.responses import NoticeCreationResponse
 from services.notice import NoticeService, get_notice_service
 
@@ -32,7 +32,8 @@ async def create_review_like(
     x_request_id: Annotated[str | None, Header()] = None,
 ) -> NoticeCreationResponse:
     return await notice_service.create_review_like(
-        request=review_like, x_request_id=x_request_id
+        request=review_like,
+        x_request_id=x_request_id,
     )
 
 
@@ -51,12 +52,13 @@ async def create_review_like(
     dependencies=[Depends(HTTPBearer())],
 )
 async def create_weekly_bookmarks(
-        weekly_bookmarks: WeeklyBookmarksRequest,
-        notice_service: NoticeService = Depends(get_notice_service),
-        x_request_id: Annotated[str | None, Header()] = None,
+    weekly_bookmarks: WeeklyBookmarksRequest,
+    notice_service: NoticeService = Depends(get_notice_service),
+    x_request_id: Annotated[str | None, Header()] = None,
 ) -> NoticeCreationResponse:
     return await notice_service.create_weekly_bookmarks(
-        request=weekly_bookmarks, x_request_id=x_request_id
+        request=weekly_bookmarks,
+        x_request_id=x_request_id,
     )
 
 
@@ -80,5 +82,6 @@ async def create_general_notice(
     x_request_id: Annotated[str | None, Header()] = None,
 ) -> NoticeCreationResponse:
     return await notice_service.create_create_general_notice(
-        request=general_notice, x_request_id=x_request_id
+        request=general_notice,
+        x_request_id=x_request_id,
     )

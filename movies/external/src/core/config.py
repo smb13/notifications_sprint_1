@@ -12,7 +12,9 @@ logging_config.dictConfig(LOGGING)
 
 class Settings(BaseSettings):
     url_prefix: str = ""
+
     debug: bool = False
+    enable_tracer: bool = False
 
     # Настройки Redis
     redis_host: str = "redis"

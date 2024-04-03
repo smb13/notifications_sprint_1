@@ -1,12 +1,12 @@
 import backoff
-
-from core.config import settings, rabbitmq_settings
-from core.logger import logger
 from process.extract import RabbitMQExtractor, consuming_messages
 from process.load import NotificationLoader
 from process.transform import DataTransform
 from store.rabbitmq.consumer import RabbitMQConsumer
 from store.rabbitmq.publisher import RabbitMQPublisher
+
+from core.config import rabbitmq_settings, settings
+from core.logger import logger
 
 dead_letters = []
 

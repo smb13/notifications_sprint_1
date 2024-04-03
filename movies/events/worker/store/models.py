@@ -1,11 +1,10 @@
 from enum import Enum
-import jinja2
 
+import jinja2
 from pydantic import BaseModel, ConfigDict, Field
 from typing_extensions import List
 
 from core.types import EmailType
-
 
 jinja_env = jinja2.Environment()
 
@@ -24,6 +23,7 @@ class BaseMessage(BaseModel):
     """
     Базовый класс сообщений
     """
+
     notification_id: str | None = Field(
         None,
         description="Id сообщения (опционально)",
@@ -53,6 +53,7 @@ class HeadersModel(BaseModel):
     """
     Заголовки сообщений
     """
+
     headers: dict[str, str | None] | None = Field(
         None,
         description="Заголовок сообщения",
@@ -89,6 +90,7 @@ class ReviewLikeModel(HeadersModel):
     """
     Модель сообщения о лайке с заголовками
     """
+
     message: ReviewLikeMessage
 
 
@@ -104,6 +106,7 @@ class WeeklyBookmarksModel(HeadersModel):
     """
     Модель сообщения о закладках за неделю с заголовками
     """
+
     message: WeeklyBookmarksMessage
 
 
@@ -131,6 +134,7 @@ class GeneralNoticeModel(HeadersModel):
     """
     Модель сообщения в свободном формате с заголовками
     """
+
     message: GeneralNoticeMessage
 
     model_config = ConfigDict(from_attributes=True)
@@ -169,7 +173,7 @@ class PushNotificationModel(NotificationBaseModel):
 
     to: List[str] = Field(
         description="Id пользователя получателя сообщения",
-        examples=[["c55aa02c-544d-4681-8f93-0850ac32fd9e",]],
+        examples=[["c55aa02c-544d-4681-8f93-0850ac32fd9e"]],
     )
 
 
@@ -180,5 +184,5 @@ class EmailNotificationModel(NotificationBaseModel):
 
     to: List[EmailType] = Field(
         description="Email получателя сообщения",
-        examples=[["user@yandex.ru",]],
+        examples=[["user@yandex.ru"]],
     )

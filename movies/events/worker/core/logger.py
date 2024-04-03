@@ -8,10 +8,9 @@ from core.config import settings
 
 # Инициализация Sentry SDK если есть env SENTRY_DSN
 if SENTRY_DSN := os.getenv("SENTRY_DSN"):
-
     sentry_logging = LoggingIntegration(
         level=logging.WARNING,  # Захват логов уровня WARNING и выше
-        event_level=logging.ERROR  # Отправка событий в Sentry начиная с уровня ERROR
+        event_level=logging.ERROR,  # Отправка событий в Sentry начиная с уровня ERROR
     )
 
     sentry_sdk.init(
@@ -25,7 +24,7 @@ if SENTRY_DSN := os.getenv("SENTRY_DSN"):
 
 # Базовая конфигурация логгирования
 logger = logging.getLogger("worker_logger")
-loglevel = logging.DEBUG if settings.debug == True else logging.INFO
+loglevel = logging.DEBUG if settings.debug else logging.INFO
 logger.setLevel(loglevel)
 
 # Настойки логов для вывода в консоль
